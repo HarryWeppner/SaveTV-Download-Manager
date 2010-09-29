@@ -1,0 +1,26 @@
+h1. SaveTV Download Manager
+
+h2. A download tool written in java for the German TV Recording website www.save.tv
+
+h2. "http://www.simino.net"
+
+SaveTVDownloadManager is a tool written in Java that is used to download recordings for a specified user
+from the German TV recording web site www.save.tv. The tools uses command line parameters and can therefore
+be scheduled in CRON or Windows Scheduler to do automated downloads. The tool also keeps track of already
+downloaded recordings.
+
+Usage is: java -jar SaveTVDownloadManager.jar -username <username> -password <password> ");
+		                                      [-proxyhost <hostname> -proxyport <port>] [-cut]
+		                                      [-threads <number>] [-mobile] [-downloadto <dir>]");
+
+		-username:    the user on Save.TV to download from");
+		-password:    the password for this user");
+		-proxyhost:   specifies the proxy host if an HTTP proxy is in between you and Save.TV");
+		-proxyport:   specifies the port the HTTP proxy is listening on");
+        -cut:         only downloads if there is an add free version availiable");
+        -threads:     sets the number of threads for simultaneous download. The default is set to 3");
+        -mobile:      additionally downloads the mobile version of the H264 recordings if present");
+        -downloadto:  sets the directory to download the videos to.
+        
+
+More informatino will follow. 
