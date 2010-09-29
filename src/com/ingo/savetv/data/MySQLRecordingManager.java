@@ -18,10 +18,16 @@ import com.ingo.savetv.DownloadManager;
 
 public class MySQLRecordingManager implements RecordingManager {
 	
+	private static final String DB = "savetv";
+	private static final String DBHOST = "localhost";
+	private static final String DBPORT = "3306";
+	private static final String DBUSER = "savetv";
+	private static final String DBPASSWORD = "abcd1234";
+	
 	private static Connection conn;
 	private static final Log LOG = LogFactory.getLog(MySQLRecordingManager.class); ;
 	private List<Recording> _recordings;
-	private static final String _DB = "savetv";
+	
 	
     /**
      * The class for using MySQL as a storage for all recorded software is not yet implemented
@@ -40,7 +46,7 @@ public class MySQLRecordingManager implements RecordingManager {
 		}
 		
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://192.168.1.10:3306/" + _DB, "savetv", "abcd1234");
+			conn = DriverManager.getConnection("jdbc:mysql://" + DBHOST + ":" + DBPORT + "/" + DB, DBUSER, DBPASSWORD);
 	        if(!this.tablesExist())
 		           this.initialize();
 	        
