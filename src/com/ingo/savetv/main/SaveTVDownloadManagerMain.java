@@ -76,7 +76,7 @@ public class SaveTVDownloadManagerMain {
 		System.out.println();
 		System.out.println("-cut:         only downloads if there is an add free version availiable");
 		System.out.println();
-		System.out.println("-threads:     sets the number of threads for simultaneous download. The default is set to 3");
+		System.out.println("-threads:     sets the number of threads for simultaneous downloads. The default is set to 3");
 		System.out.println();
 		System.out.println("-mobile:      additionally downloads the mobile version of the H264 recordings if present");
 		System.out.println();
