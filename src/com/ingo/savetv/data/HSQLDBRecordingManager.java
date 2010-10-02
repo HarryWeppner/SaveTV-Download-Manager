@@ -1,33 +1,27 @@
 package com.ingo.savetv.data;
 
 
-import java.io.IOException;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.ingo.savetv.DownloadManager;
 
+public class HSQLDBRecordingManager extends RecordingManager {
 
-
-public class HSQLDBRecordingManager implements RecordingManager {
-
-	private static Connection conn;
 	private static final  String _DB = "data/savetv";
-	private List<Recording> _recordings;
+	
 	private static final Log LOG = LogFactory.getLog(HSQLDBRecordingManager.class);	
 	
 	public HSQLDBRecordingManager(){
-		
+	
+		super();
 		_recordings = new ArrayList<Recording>();
 
 		
@@ -50,25 +44,11 @@ public class HSQLDBRecordingManager implements RecordingManager {
 	}
 	
 	
-	public boolean tablesExist() {
-		try {
-		  Statement st = conn.createStatement();		
-		  st.executeQuery("SELECT count(*) FROM recordings");
-		} catch (SQLException sqlx){
-			if(sqlx.getErrorCode() == -22){
-			    return false;
-			} else {
-				LOG.error("Error when trying to read local data. The message is " + sqlx.getMessage());
-			}
-		}
-		return true;
-	}
-	
 	public boolean initialize(){
 	    try {
 	    	LOG.info("Inititializing the database");
 	    	Statement st = conn.createStatement();
-	    	st.executeUpdate("CREATE CACHED TABLE recordings( id VARCHAR(20), downloadurl VARCHAR(255), title VARCHAR(100), description VARCHAR(300), filename VARCHAR(100), filetype VARCHAR(1), complete BOOLEAN, PRIMARY KEY(id, filetype))");
+	    	st.executeUpdate("CREATE CACHED TABLE recordings( id VARCHAR(20), downloadurl VARCHAR(255), title VARCHAR(100), description VARCHAR(300), filename VARCHAR(100), filetype VARCHAR(1), firsttry TIMESTAMP, complete BOOLEAN, PRIMARY KEY(id, filetype))");
 			// more statements declaring more tables should go here.
 	    	conn.commit();
 	    } catch (SQLException sqlx){
@@ -79,106 +59,38 @@ public class HSQLDBRecordingManager implements RecordingManager {
 	    return true;
 	}
 	
-	public boolean isExisting(Recording recording){
-		try {
-			boolean ret = false;
-		    Statement st = conn.createStatement();
-	        String query = "SELECT COUNT(id) AS rowcount FROM recordings WHERE id ='" + recording.getId() + "' AND filetype = '" + recording.getType() + "' AND complete = TRUE";
-		    ResultSet res = st.executeQuery(query);
-		    res.next();
-		    if(res.getInt("rowcount") > 0)
-		    	ret = true;   	
-		    res.close();
-		    return ret;   
-		} catch (SQLException sqlex){
-			LOG.error("Java exception " + sqlex.getMessage() + " was thrown with with SQL message " + sqlex.getSQLState());
-			return false;
-		}
-	}
-	
-	public boolean remove(Recording recording){
-		try {  
-		   _recordings.remove(recording);
-		   return true;
-		} catch (Exception e){
-		   return false;
-		}
-	}
-	
-	/**
-	 *  Searches the website for new recordings. This is currently done with a pretty primitive approach that
-	 *  searches for a "openWindow(" string followed by numbers. The first number is the ID of the recording
-	 *  the second number is apparently some old format information that seems to be not used any more the
-	 *  third one specifies whether there is an addFree version availiable or at least if there potentially
-	 *  is one available and the last number is the format Type
-	 */
-	public List<Recording> findNewRecordings(String htmlpage, boolean mobile, boolean cut, DownloadManager dl){
-		Pattern MY_PATTERN = Pattern.compile("openWindow\\([0-9]+\\, [0,1]\\, -?[0,1]\\, [0-9]\\)");
-		Matcher m = MY_PATTERN.matcher(htmlpage);
-		while(m.find()){
-			Recording recording = new Recording();
-			String s[] = m.group().split("[^0-9]+");
-			// set the recording id
-			recording.setId(s[1]);
-			
-			// determine the recording format
-			int format = Integer.parseInt(s[4]);
-			switch(format){
-			   case Recording.H264_STANDARD: recording.setType(Recording.H264_STANDARD); break;
-			   case Recording.H264_MOBILE : recording.setType(Recording.H264_MOBILE); break;
-			   case Recording.DIVX_STANDARD : recording.setType(Recording.DIVX_STANDARD); break;
-			
-		    }
-			boolean add = false;
-			if(!isExisting(recording)){
-				// Only use the mobile recoridngs if the mobile parameter was used 
-				if((recording.getType() != Recording.H264_MOBILE) || ((recording.getType() == Recording.H264_MOBILE) && mobile)){
-                    LOG.debug("Found recording of type : " + recording.getType() + " while the mobile switch is set to:" + mobile);
-					if(s[3].equals("0")){ 
-						LOG.info("Found DIVX verion for recording with ID: " + recording.getId() + " skiping the check for add free version");
-						recording.setAddfree(false);
-					} else {
-						// now that we found out that add free versions are in general available let's make sure there really is
-						// already an add free version there.
-						try {
-							if(cut && dl.isAddFreeAvailable(recording.getId()))
-								recording.setAddfree(true);
-							else
-								recording.setAddfree(false);
-						} catch (IOException ex){}
-					}
-				}	
-
-				if(recording.getType() == Recording.DIVX_STANDARD)
-					add = true;
-				else {
-					if(cut && recording.isAddfree())
-						add = true;
-					if(!cut && !recording.isAddfree())
-					    add = true;
-				}				
-				if(add)	  
-				    _recordings.add(recording);
-			}  
-
-		}
-		return _recordings; 
-	}
-	
-	public void showAll(){
-		for(Recording rec : _recordings){
-			System.out.println(rec.getId());
-			System.out.println(rec.getDownloadURL());
-		}
-	}
-	
 	public void update(List<Recording> recordings) throws SQLException {
 		for(Recording recording : recordings){
 			if(recording.isComplete()) this.update(recording);
 		}
 	}
 	
-	
+	public Recording getRecording(String id, int type){
+		try {
+			Recording recording = new Recording();
+		    Statement st = conn.createStatement();
+	        String query = "SELECT * FROM recordings WHERE id = '" + id + "' AND filetype = '" + type + "'";
+		    ResultSet res = st.executeQuery(query);
+		    if(res.next()){
+		    	// return the found record as a whole
+		    	recording.setTitle(res.getString("title"));
+		    	recording.setDownloadURL(res.getString("downloadurl"));
+		    	if(res.getBoolean("complete")) recording.setComplete();
+		    	recording.setDescription(res.getString("description"));
+		    	recording.setFilename(res.getString("filename"));
+		    	recording.setFirstTried(new Date(res.getTimestamp("firsttry").getTime()));
+		    } else {
+		        recording = null;
+		    }
+		    res.close();
+		    return recording;   
+		} catch (SQLException sqlex){
+			LOG.error("Java exception " + sqlex.getMessage() + " was thrown with with SQL message " + sqlex.getSQLState());
+			return null;
+		}
+	}
+
+		
 	public void update(Recording recording) throws SQLException {
 			
 			Statement st = conn.createStatement();
@@ -189,6 +101,7 @@ public class HSQLDBRecordingManager implements RecordingManager {
 			if(!(recording.getDescription() == null)){ sb.append(", description = '"); sb.append(recording.getDescription()); sb.append("' "); }
 			if(!(recording.getFilename() == null)){ sb.append(", filename = '"); sb.append(recording.getFilename()); sb.append("' "); }
 			if(!(recording.getFilename() == null)){ sb.append(", filetype = '"); sb.append(recording.getType()); sb.append("' "); }
+			if(!(recording.getFirstTried() == null)){ sb.append(", firsttried = '"); sb.append(new java.sql.Timestamp(recording.getFirstTried().getTime()).toString()); sb.append("' ");}
 			if(!recording.isComplete()) sb.append(", complete = FALSE "); else sb.append(", complete = TRUE "); 
 			sb.append("WHERE id = '");
 			sb.append(recording.getId());
@@ -222,6 +135,8 @@ public class HSQLDBRecordingManager implements RecordingManager {
 			sb.append("', '");
 			if(recording.getType() == 0 ) sb.append("");else sb.append(recording.getType());
 			sb.append("', ");
+			if(!(recording.getFirstTried() == null)) sb.append(""); else sb.append(new java.sql.Timestamp(recording.getFirstTried().getTime()).toString()); sb.append("' ");
+			sb.append("', ");
 			if(!recording.isComplete()) sb.append("FALSE "); else sb.append("TRUE "); 
 			sb.append(")");
 			LOG.trace(sb.toString());
@@ -231,6 +146,11 @@ public class HSQLDBRecordingManager implements RecordingManager {
 			
 			conn.commit();
 
+	}
+	
+	public void insertOrUpdate(Recording recording) throws SQLException {
+		// nothing done here so far. Let's see how this goes. once the rest is complete.
+		
 	}
 	
 	public boolean close(){

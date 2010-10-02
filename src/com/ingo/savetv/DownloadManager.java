@@ -385,30 +385,37 @@ public class DownloadManager {
 				LOG.debug("Initialize Recording Manager complete");
 			
 				if(recordings.size() > 0){
-					
-					// loop over the recordings to download and retrieve the download URL from Save.TV. This is hidden in some AJAX calls
-					// apparently Save.TV thinks they are quite smart hiding the URLs that way as the real download URL's are in no way secured.
-					// right now the website basically has two differnt types of recodings. The Standard Recording which is either in DIVX or H.264
-					// depending on how you did schedule the recording. In addition there is a mobile version of the h.264 provided if the recoding
-					// was scheduled in this format. The URL that is used for retrieving the real download URL is only differnt between standard and
-					// mobile. There is not differnce between DIVX and H.264 standard recordings.
+                    boolean removeFromList = false;
+					// Loop over all the recordings that we want to download now and that match the parameters there where
+					// specified on the commandline.
 					LOG.info("Looking for download URLs for new recordings");
 					for(Recording recording : recordings){
-						
-						try {					   
-							recording.setDownloadURL(getDownloadURL(recording));
-						} catch(SaveTVResponseException stvex){
-						   LOG.debug(stvex.getMessage());
-						   
-						    // since there was an error we in finding the download url we need to remove the recording from the list again.
+						if(recording.isDownloadnow()){
+							try {					   
+								recording.setDownloadURL(getDownloadURL(recording));
+							} catch(SaveTVResponseException stvex){
+								LOG.debug(stvex.getMessage());					   
+                                removeFromList = true;
+							}
+						} else {
+						// just write the newly found entry that is not yet ready for download to the db. This is used
+						// so that we can overcome the shortcoming of Save.TV to provide a cutlist for each recording
+							   _rcm.insert(recording);
+							   removeFromList = true;
+						}
+						// remove the recording from the list of recording that are to be downloaed either because there was an error
+						// finding the download url or because -cut was specified and there was actually no cutlist available at the moment
+						if(removeFromList){
+							// since there was an error we in finding the download url we need to remove the recording from the list again.
 							Iterator<Recording> it = recordings.iterator(); 
 							while(it.hasNext()){
-							  Recording rec = it.next();
-							  if(rec.getId().equals(recording.getId())){
-								 it.remove();
-								 break;
-							  }
+								Recording rec = it.next();
+								if(rec.getId().equals(recording.getId())){
+									it.remove();
+									break;
+								}
 							}
+							
 						}
 					}	
 					
@@ -418,7 +425,7 @@ public class DownloadManager {
 					  LOG.info("Starting to download with " + pm.getNumberOfDownloadThreads() + " threads simultanously");
 					else
 					  LOG.info("Starting to download the one recording that was found.");
-					long startTime = System.currentTimeMillis();
+					
 					ThreadScheduler scheduler = new ThreadScheduler(_client, recordings, pm.getDownloadDirectory(), pm.getDbUsed());
 					// start the number of threads given in the arguments of the application
 					scheduler.start(pm.getNumberOfDownloadThreads());
@@ -426,21 +433,9 @@ public class DownloadManager {
 					LOG.debug("Check whether the download thereads are still running");
 					// loop and sleep with this thread until all the download threads are done.
 					while(!scheduler.allThreadsDone()){
-						long currentTime =  (System.currentTimeMillis() - startTime) / 1000;
-						LOG.debug("Looks like there are still download threads running. Started the Threads " + currentTime + " seconds ago");
-						Thread.sleep(60000);
 						LOG.debug("Sleeping 1 Minute before checking again if all threads are done");
+						Thread.sleep(60000);
 					}
-					LOG.debug("All download threads are complete");
-					
-					// now that all threads are complete we can go and update the database with the recordings that have
-					// completely downloaded
-					// LOG.debug("Update the db entries to reflect that the newly downloaded recordings are in fact downloaded");
-					// try {
-					//   rcm.insert(recordings);					
-					// } catch (SQLException ex){
-					// 	LOG.debug("SQL Exception thrown while inserting new recordings into the db" + ex.getMessage());
-					//}
 					LOG.info("Downloading finished");
 			
 				} else {

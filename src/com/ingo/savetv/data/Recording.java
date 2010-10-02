@@ -1,5 +1,7 @@
 package com.ingo.savetv.data;
 
+import java.util.Date;
+
 public class Recording {
 
 	public static final int DIVX_STANDARD = 1;
@@ -14,6 +16,15 @@ public class Recording {
 	private String _downloadurl;
 	private boolean _complete;
 	private boolean _addfree;
+	private Date _firsttried = null;
+	
+	public boolean isDownloadnow() {
+		return _downloadnow;
+	}
+	public void setDownloadnow(boolean downloadnow) {
+		this._downloadnow = downloadnow;
+	}
+	private boolean _downloadnow;
 
 	public boolean isAddfree() {
 		return _addfree;
@@ -63,6 +74,13 @@ public class Recording {
 	public void setType(int type){
 		_type = type;
 	}
+	public void setFirstTried(Date date){
+		_firsttried = date;
+	}
+	public Date getFirstTried(){
+		return _firsttried;
+	}
+	
 
 	
 }
