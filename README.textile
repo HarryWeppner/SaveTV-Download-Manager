@@ -2,7 +2,7 @@ h1. SaveTV Download Manager
 
 h2. A download tool written in java for the German TV Recording website www.save.tv
 
-h2. "http://www.simino.net"
+h2. <a href="">http://www.simino.net</a>
 
 SaveTVDownloadManager is a tool written in Java that is used to download recordings for a specified user
 from the German TV recording web site www.save.tv. The tools uses command line parameters and can therefore
@@ -23,4 +23,4 @@ Usage is: java -jar SaveTVDownloadManager.jar -username <username> -password <pa
         -downloadto:  sets the directory to download the videos to.
         
 
-More informatino will follow. 
+More information will follow. 
