@@ -2,7 +2,6 @@ package com.ingo.savetv.data;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
@@ -40,9 +39,11 @@ public abstract class RecordingManager {
 	
 	public abstract void insert(Recording recording) throws SQLException;
 	
-	public abstract void insertOrUpdate(Recording recording) throws SQLException;
+	public abstract Recording find(String id, int type);
 	
 	public abstract boolean close();
+	
+	public abstract void clean() throws SQLException;
 	
 	public boolean remove(Recording recording){
 		try {  
@@ -71,7 +72,7 @@ public abstract class RecordingManager {
 	 *  Searches the website for new recordings. This is currently done with a pretty primitive approach that
 	 *  searches for a "openWindow(" string followed by numbers. The first number is the ID of the recording
 	 *  the second number is apparently some old format information that seems to be not used any more the
-	 *  third one specifies whether there is an addFree version availiable or at least if there potentially
+	 *  third one specifies whether there is an addFree version available or at least if there potentially
 	 *  is one available and the last number is the format Type
 	 */
 	public List<Recording> findNewRecordings(String htmlpage, boolean mobile, boolean cut, DownloadManager dl){
@@ -83,7 +84,7 @@ public abstract class RecordingManager {
 			String recordingId = s[1];
 			int recordingType = Integer.parseInt(s[4]);;
 			
-			recording = this.getRecording(recordingId, recordingType);
+			recording = this.find(recordingId, recordingType);
 		    if(recording == null){
 		    	recording = new Recording();
 		        recording.setId(recordingId);
@@ -93,28 +94,25 @@ public abstract class RecordingManager {
                     LOG.debug("Found recording of type : " + recordingType + " while the mobile switch is set to:" + mobile);
 					if(s[3].equals("0")){ 
 						LOG.info("Found DIVX verion for recording with ID: " + recordingId + " skiping the check for add free version");
-						recording.setAddfree(false);
-						recording.setDownloadnow(true);
+						recording.setDownloadnow();
 					} else {
 						// now that we found out that add free versions are in general available let's make sure there really is
 						// already an add free version there.
 						try {
 							if(cut && dl.isAddFreeAvailable(recording.getId())){
 								recording.setFirstTried(new Date());
-								recording.setAddfree(true);
-								recording.setDownloadnow(true);
+								recording.setAddfree();
+								recording.setDownloadnow();
 							} else {
 							 // since there is not add free version available let's find out about the current date and time and store it
 							 // in the record so that next time around we can check against this date when the recording should be downloaded
 						     // no matter whether there is a recording or not
 								recording.setFirstTried(new Date());
-							    recording.setAddfree(false);
-							    recording.setDownloadnow(false);
 							}	
 						} catch (IOException ex){}
 					}
+	                _recordings.add(recording);
 				}	
-                _recordings.add(recording);
 				
 			}  else {
 
@@ -122,7 +120,7 @@ public abstract class RecordingManager {
 				  // check when we tried the first time to download the show but there was no cutlist available.
 				  // if this is already 48 hours ago the download anyways
 				  if((new Date().getTime() - recording.getFirstTried().getTime()) > TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
-				      recording.setDownloadnow(true);
+				      recording.setDownloadnow();
 					  _recordings.add(recording);
 				      
 				  }
@@ -132,8 +130,7 @@ public abstract class RecordingManager {
 		}
 		return _recordings; 
 	}
-	
-	public abstract Recording getRecording(String id, int type);
+
 	
 	public void showAll(){
 		for(Recording rec : _recordings){

@@ -66,7 +66,7 @@ public class MySQLRecordingManager extends RecordingManager {
 	    return true;
 	}
 	
-	public Recording getRecording(String id, int type){
+	public Recording find(String id, int type){
 		try {
 			Recording recording = new Recording();
 		    Statement st = conn.createStatement();
@@ -84,6 +84,10 @@ public class MySQLRecordingManager extends RecordingManager {
 		        recording = null;
 		    }
 		    res.close();
+		    st.close();
+		    res = null;
+		    st = null;
+
 		    return recording;   
 		} catch (SQLException sqlex){
 			LOG.error("Java exception " + sqlex.getMessage() + " was thrown with with SQL message " + sqlex.getSQLState());
@@ -117,6 +121,8 @@ public class MySQLRecordingManager extends RecordingManager {
 		
 		LOG.trace(sb.toString());
 		st.execute(sb.toString());
+		st.close();
+		st = null;
 		// conn.commit(); // not necessary as we assume MYSQL is installed with default setting and auto commit is on
 	}
 	
@@ -148,13 +154,19 @@ public class MySQLRecordingManager extends RecordingManager {
 		
 		// execute the insert statement
 		st.executeUpdate(sb.toString());
+		st.close();
+		st = null;
 		
 		// conn.commit(); // not necessary as we assume MYSQL is installed with default setting and auto commit is on
 	}
 	
-	public void insertOrUpdate(Recording recording){
-		
+	public void clean() throws SQLException {
+		Statement st = conn.createStatement();
+        st.executeUpdate("DELETE FROM recordings");
+        st.close();
+        st = null;
 	}
+	
 	
 	public boolean close(){
 		return true;

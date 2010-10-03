@@ -14,23 +14,23 @@ public class Recording {
 	private int _type;
 	private String _description;
 	private String _downloadurl;
-	private boolean _complete;
-	private boolean _addfree;
+	private boolean _complete = false;
+	private boolean _addfree = false;
 	private Date _firsttried = null;
+	private boolean _downloadnow = false;
 	
 	public boolean isDownloadnow() {
 		return _downloadnow;
 	}
-	public void setDownloadnow(boolean downloadnow) {
-		this._downloadnow = downloadnow;
+	public void setDownloadnow() {
+		this._downloadnow = true;
 	}
-	private boolean _downloadnow;
 
 	public boolean isAddfree() {
 		return _addfree;
 	}
-	public void setAddfree(boolean addfree) {
-		this._addfree = addfree;
+	public void setAddfree() {
+		this._addfree = true;
 	}
 	public String getId() {
 		return _id;

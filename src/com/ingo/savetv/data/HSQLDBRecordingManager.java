@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -65,7 +66,7 @@ public class HSQLDBRecordingManager extends RecordingManager {
 		}
 	}
 	
-	public Recording getRecording(String id, int type){
+	public Recording find(String id, int type){
 		try {
 			Recording recording = new Recording();
 		    Statement st = conn.createStatement();
@@ -83,6 +84,10 @@ public class HSQLDBRecordingManager extends RecordingManager {
 		        recording = null;
 		    }
 		    res.close();
+		    st.close();
+		    res = null;
+		    st = null;
+		    
 		    return recording;   
 		} catch (SQLException sqlex){
 			LOG.error("Java exception " + sqlex.getMessage() + " was thrown with with SQL message " + sqlex.getSQLState());
@@ -101,14 +106,17 @@ public class HSQLDBRecordingManager extends RecordingManager {
 			if(!(recording.getDescription() == null)){ sb.append(", description = '"); sb.append(recording.getDescription()); sb.append("' "); }
 			if(!(recording.getFilename() == null)){ sb.append(", filename = '"); sb.append(recording.getFilename()); sb.append("' "); }
 			if(!(recording.getFilename() == null)){ sb.append(", filetype = '"); sb.append(recording.getType()); sb.append("' "); }
-			if(!(recording.getFirstTried() == null)){ sb.append(", firsttried = '"); sb.append(new java.sql.Timestamp(recording.getFirstTried().getTime()).toString()); sb.append("' ");}
+			if(!(recording.getFirstTried() == null)){ sb.append(", firsttry = '"); sb.append(new java.sql.Timestamp(recording.getFirstTried().getTime())); sb.append("' ");}
 			if(!recording.isComplete()) sb.append(", complete = FALSE "); else sb.append(", complete = TRUE "); 
 			sb.append("WHERE id = '");
 			sb.append(recording.getId());
 			sb.append("'");
 			
-			LOG.trace(sb.toString());
+			LOG.debug(sb.toString());
 			st.execute(sb.toString());
+			st.close();
+			st = null;
+			
 			conn.commit();
 	}
 	
@@ -134,23 +142,26 @@ public class HSQLDBRecordingManager extends RecordingManager {
 			if(recording.getFilename() == null) sb.append("");else sb.append(recording.getFilename());
 			sb.append("', '");
 			if(recording.getType() == 0 ) sb.append("");else sb.append(recording.getType());
-			sb.append("', ");
-			if(!(recording.getFirstTried() == null)) sb.append(""); else sb.append(new java.sql.Timestamp(recording.getFirstTried().getTime()).toString()); sb.append("' ");
+			sb.append("', '");
+			if(recording.getFirstTried() == null) sb.append(""); else sb.append(new Timestamp(recording.getFirstTried().getTime()));
 			sb.append("', ");
 			if(!recording.isComplete()) sb.append("FALSE "); else sb.append("TRUE "); 
 			sb.append(")");
-			LOG.trace(sb.toString());
+			LOG.debug(sb.toString());
 			
 			// execute the insert statement
 			st.executeUpdate(sb.toString());
+			st.close();
+			st = null;
 			
 			conn.commit();
-
 	}
 	
-	public void insertOrUpdate(Recording recording) throws SQLException {
-		// nothing done here so far. Let's see how this goes. once the rest is complete.
-		
+	public void clean() throws SQLException {
+			Statement st = conn.createStatement();
+			st.executeUpdate("DELETE from recordings");
+			st.close();
+			st = null;
 	}
 	
 	public boolean close(){

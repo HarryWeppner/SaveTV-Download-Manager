@@ -134,7 +134,7 @@ public class ThreadScheduler {
 				if(recording.getId().equals(id)){
 				    try{
 						recording.setComplete();	
-					    _rcm.insertOrUpdate(recording);
+					    _rcm.update(recording);
 				    } catch (SQLException ex){
 				    	LOG.error("Error when trying to set the recording with id " + recording.getId() + " to complete.");
 				    	LOG.error(ex.getMessage());

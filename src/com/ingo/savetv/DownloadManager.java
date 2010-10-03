@@ -393,6 +393,7 @@ public class DownloadManager {
 						if(recording.isDownloadnow()){
 							try {					   
 								recording.setDownloadURL(getDownloadURL(recording));
+								_rcm.insert(recording);
 							} catch(SaveTVResponseException stvex){
 								LOG.debug(stvex.getMessage());					   
                                 removeFromList = true;
