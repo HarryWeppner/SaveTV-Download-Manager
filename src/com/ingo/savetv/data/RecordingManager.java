@@ -94,7 +94,7 @@ public abstract class RecordingManager {
                     LOG.debug("Found recording of type : " + recordingType + " while the mobile switch is set to:" + mobile);
 					if(s[3].equals("0")){ 
 						LOG.info("Found DIVX verion for recording with ID: " + recordingId + " skiping the check for add free version");
-						recording.setDownloadnow();
+						recording.setDownloadNow();
 					} else {
 						// now that we found out that add free versions are in general available let's make sure there really is
 						// already an add free version there.
@@ -102,7 +102,7 @@ public abstract class RecordingManager {
 							if(cut && dl.isAddFreeAvailable(recording.getId())){
 								recording.setFirstTried(new Date());
 								recording.setAddfree();
-								recording.setDownloadnow();
+								recording.setDownloadNow();
 							} else {
 							 // since there is not add free version available let's find out about the current date and time and store it
 							 // in the record so that next time around we can check against this date when the recording should be downloaded
@@ -120,7 +120,7 @@ public abstract class RecordingManager {
 				  // check when we tried the first time to download the show but there was no cutlist available.
 				  // if this is already 48 hours ago the download anyways
 				  if((new Date().getTime() - recording.getFirstTried().getTime()) > TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
-				      recording.setDownloadnow();
+				      recording.setDownloadNow();
 					  _recordings.add(recording);
 				      
 				  }

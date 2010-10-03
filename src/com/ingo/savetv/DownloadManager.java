@@ -390,7 +390,7 @@ public class DownloadManager {
 					// specified on the commandline.
 					LOG.info("Looking for download URLs for new recordings");
 					for(Recording recording : recordings){
-						if(recording.isDownloadnow()){
+						if(recording.isDownloadNow()){
 							try {					   
 								recording.setDownloadURL(getDownloadURL(recording));
 								_rcm.insert(recording);

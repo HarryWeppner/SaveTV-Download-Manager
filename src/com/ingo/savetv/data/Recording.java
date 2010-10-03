@@ -19,10 +19,10 @@ public class Recording {
 	private Date _firsttried = null;
 	private boolean _downloadnow = false;
 	
-	public boolean isDownloadnow() {
+	public boolean isDownloadNow() {
 		return _downloadnow;
 	}
-	public void setDownloadnow() {
+	public void setDownloadNow() {
 		this._downloadnow = true;
 	}
 

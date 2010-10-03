@@ -19,8 +19,6 @@ public class HSQLDBTest extends TestCase {
 		super(name);
 		rec.setId("123456");
 		rec.setAddfree();
-		rec.setComplete();
-		rec.setDownloadnow();
 		rec.setDescription("This is a simple descriptino for a recording");
 		rec.setDownloadURL("http://cs53.save.tv/DL0030000399930003993?");
 		rec.setFilename("The_filename_of_the_recording_that_was_downloaded.mp4");
@@ -62,8 +60,8 @@ public class HSQLDBTest extends TestCase {
 		Recording recording = _rcm.find(rec.getId(), rec.getType());
 		
 		assertTrue("Expected non-null result", recording != null);
-		assertEquals("Wrong URL", "http://cs53.save.tv/DL0030000399930003993?", recording.getId());
-		assertEquals("Wrong DownloadNow", true, recording.isDownloadnow());
+		assertEquals("Wrong URL", "http://cs53.save.tv/DL0030000399930003993?", recording.getDownloadURL());
+		assertEquals("Wrong Title", "Krieg und Frieden", recording.getTitle());
 		
 		
 	}
@@ -71,6 +69,7 @@ public class HSQLDBTest extends TestCase {
 	public void testUpdate(){
 		
 	    rec.setTitle("Nochmal ein Test");
+	    rec.setComplete();
 	    try {
 	      _rcm.update(rec);
 	    } catch (SQLException sqlx){
@@ -81,6 +80,6 @@ public class HSQLDBTest extends TestCase {
 	    
 	    assertTrue("Expected non-null result", recording != null);
 	    assertEquals("Wrong Title ", "Nochmal ein Test", recording.getTitle());
-		
+	    assertEquals("Wrong Complete ", true, recording.isComplete());
 	}
 }
