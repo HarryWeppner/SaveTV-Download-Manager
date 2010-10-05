@@ -4,6 +4,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -40,6 +41,7 @@ public class MySQLRecordingManager extends RecordingManager {
 		
 		try {
 			conn = DriverManager.getConnection("jdbc:mysql://" + DBHOST + ":" + DBPORT + "/" + DB, DBUSER, DBPASSWORD);
+			conn.setAutoCommit(false);
 	        if(!this.tablesExist())
 		           this.initialize();
 	        
@@ -54,10 +56,12 @@ public class MySQLRecordingManager extends RecordingManager {
 	    try {
 	    	LOG.info("Inititializing the database");
 	    	Statement st = conn.createStatement();
-	    	st.executeUpdate("CREATE TABLE recordings( id VARCHAR(20), downloadurl VARCHAR(255), title VARCHAR(100), description VARCHAR(300), filename VARCHAR(100), filetype VARCHAR(1), complete BOOLEAN, PRIMARY KEY(id, filetype))");
+	    	st.executeUpdate("CREATE TABLE recordings( id VARCHAR(20), downloadurl VARCHAR(255), title VARCHAR(100), description VARCHAR(300), filename VARCHAR(100), filetype VARCHAR(1), firsttry TIMESTAMP, complete BOOLEAN, PRIMARY KEY(id, filetype))");
 			// more statements declaring more tables should go here.
+	    	st.close();
+	    	st = null;
 
-	    	// conn.commit();  // not necessary as we assume MYSQL is installed with default setting and auto commit is on
+	    	conn.commit(); 
 	    } catch (SQLException sqlx){
 	    	sqlx.printStackTrace();
 	        return false;
@@ -113,17 +117,18 @@ public class MySQLRecordingManager extends RecordingManager {
 		if(!(recording.getDescription() == null)){ sb.append(", description = '"); sb.append(recording.getDescription()); sb.append("' "); }
 		if(!(recording.getFilename() == null)){ sb.append(", filename = '"); sb.append(recording.getFilename()); sb.append("' "); }
 		if(!(recording.getFilename() == null)){ sb.append(", filetype = '"); sb.append(recording.getType()); sb.append("' "); }
-		// if(!(recording.getFirstTried() == null)){ sb.append(", firsttried '" )
+		if(!(recording.getFirstTried() == null)){ sb.append(", firsttry = '"); sb.append(new java.sql.Timestamp(recording.getFirstTried().getTime())); sb.append("' ");}
 		if(!recording.isComplete()) sb.append(", complete = FALSE "); else sb.append(", complete = TRUE "); 
 		sb.append("WHERE id = '");
 		sb.append(recording.getId());
 		sb.append("'");
 		
-		LOG.trace(sb.toString());
+		LOG.debug(sb.toString());
 		st.execute(sb.toString());
 		st.close();
 		st = null;
-		// conn.commit(); // not necessary as we assume MYSQL is installed with default setting and auto commit is on
+		
+		conn.commit();
 	}
 	
 	public void insert(List<Recording> recordings) throws SQLException{	
@@ -147,17 +152,19 @@ public class MySQLRecordingManager extends RecordingManager {
 		if(recording.getFilename() == null) sb.append("");else sb.append(recording.getFilename());
 		sb.append("', '");
 		if(recording.getType() == 0 ) sb.append("");else sb.append(recording.getType());
+		sb.append("', '");
+		if(recording.getFirstTried() == null) sb.append(""); else sb.append(new Timestamp(recording.getFirstTried().getTime()));
 		sb.append("', ");
 		if(!recording.isComplete()) sb.append("FALSE "); else sb.append("TRUE "); 
 		sb.append(")");
-		LOG.trace(sb.toString());
+		LOG.debug(sb.toString());
 		
 		// execute the insert statement
 		st.executeUpdate(sb.toString());
 		st.close();
 		st = null;
 		
-		// conn.commit(); // not necessary as we assume MYSQL is installed with default setting and auto commit is on
+		conn.commit();
 	}
 	
 	public void clean() throws SQLException {

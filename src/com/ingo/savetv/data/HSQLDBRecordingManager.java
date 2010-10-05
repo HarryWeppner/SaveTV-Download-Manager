@@ -35,6 +35,7 @@ public class HSQLDBRecordingManager extends RecordingManager {
 		try {
 			
 	        conn = DriverManager.getConnection("jdbc:hsqldb:file:" + _DB, "SA", "");
+	        conn.setAutoCommit(false);
 	        if(!this.tablesExist())
 	           this.initialize();
 	        
@@ -50,7 +51,10 @@ public class HSQLDBRecordingManager extends RecordingManager {
 	    	LOG.info("Inititializing the database");
 	    	Statement st = conn.createStatement();
 	    	st.executeUpdate("CREATE CACHED TABLE recordings( id VARCHAR(20), downloadurl VARCHAR(255), title VARCHAR(100), description VARCHAR(300), filename VARCHAR(100), filetype VARCHAR(1), firsttry TIMESTAMP, complete BOOLEAN, PRIMARY KEY(id, filetype))");
-			// more statements declaring more tables should go here.
+			st.close();
+			st = null;
+	    	
+	    	// more statements declaring more tables should go here.
 	    	conn.commit();
 	    } catch (SQLException sqlx){
 	    	sqlx.printStackTrace();
