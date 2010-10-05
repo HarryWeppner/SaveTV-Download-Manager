@@ -74,6 +74,8 @@ public class HSQLDBRecordingManager extends RecordingManager {
 		    ResultSet res = st.executeQuery(query);
 		    if(res.next()){
 		    	// return the found record as a whole
+		    	recording.setId(res.getString("id"));
+		    	recording.setType(Integer.parseInt(res.getString("filetype")));
 		    	recording.setTitle(res.getString("title"));
 		    	recording.setDownloadURL(res.getString("downloadurl"));
 		    	if(res.getBoolean("complete")) recording.setComplete();

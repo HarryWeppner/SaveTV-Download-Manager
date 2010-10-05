@@ -286,10 +286,10 @@ public class DownloadManager {
 			sb = null;
 			int start = inputLine.indexOf("_4127_12795177172 = '1';");
 			if(start > 0){
-				LOG.info("Found an add free version for recording ID: " + recordingid);
+				LOG.info("Found an add free version for recording ID: " + recordingid + " adding it to the dowload list");
 				addfreethere =  true;
 			} else {
-				LOG.info("No add free version avaiable for ID: " + recordingid + " skiping recording for mow ");
+				LOG.info("No add free version avaiable for recording " + recordingid + " skipping recording for mow");
 			}
 		}
 		return addfreethere;
@@ -384,39 +384,34 @@ public class DownloadManager {
 				content = null;
 				LOG.debug("Initialize Recording Manager complete");
 			
+				boolean removeFromList = false;
 				if(recordings.size() > 0){
-                    boolean removeFromList = false;
 					// Loop over all the recordings that we want to download now and that match the parameters there where
 					// specified on the commandline.
 					LOG.info("Looking for download URLs for new recordings");
-					for(Recording recording : recordings){
+					for(Iterator<Recording> it = recordings.iterator(); it.hasNext(); ){
+						Recording recording = it.next();
+	                    removeFromList = false;
 						if(recording.isDownloadNow()){
 							try {					   
 								recording.setDownloadURL(getDownloadURL(recording));
-								_rcm.insert(recording);
 							} catch(SaveTVResponseException stvex){
 								LOG.debug(stvex.getMessage());					   
                                 removeFromList = true;
 							}
 						} else {
-						// just write the newly found entry that is not yet ready for download to the db. This is used
-						// so that we can overcome the shortcoming of Save.TV to provide a cutlist for each recording
+						  
+						  // just write the newly found entry that is not yet ready for download to the db. After insert
+					      // remove it from the list of recordings to download
 							   _rcm.insert(recording);
 							   removeFromList = true;
 						}
 						// remove the recording from the list of recording that are to be downloaed either because there was an error
 						// finding the download url or because -cut was specified and there was actually no cutlist available at the moment
 						if(removeFromList){
-							// since there was an error we in finding the download url we need to remove the recording from the list again.
-							Iterator<Recording> it = recordings.iterator(); 
-							while(it.hasNext()){
-								Recording rec = it.next();
-								if(rec.getId().equals(recording.getId())){
-									it.remove();
-									break;
-								}
-							}
-							
+							// remove the recording that we just iterate over from the list of recordings as we are not
+							// downloading it now.
+							it.remove();
 						}
 					}	
 					

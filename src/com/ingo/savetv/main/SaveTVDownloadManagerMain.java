@@ -17,7 +17,7 @@ import com.ingo.savetv.Parameter;
 public class SaveTVDownloadManagerMain {
     
 	private static final Log LOG = LogFactory.getLog(SaveTVDownloadManagerMain.class);
-	private static final String VERSION = "0.9.1.17";
+	private static final String VERSION = "0.9.1.20";
 		
 	public static void printVersion(){
 		System.out.println(VERSION);

@@ -93,7 +93,7 @@ public abstract class RecordingManager {
 				if((recordingType != Recording.H264_MOBILE) || ((recordingType == Recording.H264_MOBILE) && mobile)){
                     LOG.debug("Found recording of type : " + recordingType + " while the mobile switch is set to:" + mobile);
 					if(s[3].equals("0")){ 
-						LOG.info("Found DIVX verion for recording with ID: " + recordingId + " skiping the check for add free version");
+						LOG.info("Found DIVX verion for recording " + recordingId + " skiping the check for add free version");
 						recording.setDownloadNow();
 					} else {
 						// now that we found out that add free versions are in general available let's make sure there really is
@@ -108,6 +108,7 @@ public abstract class RecordingManager {
 							 // in the record so that next time around we can check against this date when the recording should be downloaded
 						     // no matter whether there is a recording or not
 								recording.setFirstTried(new Date());
+								LOG.info("Found a recording " + recording.getId() + " that has no cutlist yet not adding it to the download list yet");
 							}	
 						} catch (IOException ex){}
 					}
@@ -117,12 +118,22 @@ public abstract class RecordingManager {
 			}  else {
 
 			   if(!recording.isComplete()){
-				  // check when we tried the first time to download the show but there was no cutlist available.
-				  // if this is already 48 hours ago the download anyways
-				  if((new Date().getTime() - recording.getFirstTried().getTime()) > TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
-				      recording.setDownloadNow();
-					  _recordings.add(recording);
-				      
+				  // check if there is a add free version available now. if yes add it to the download list
+				  try {
+				     if(cut && dl.isAddFreeAvailable(recording.getId())){
+					    recording.setAddfree();
+					    recording.setDownloadNow();
+				     } else {					  
+				    	// check when we tried the first time to download the show but there was no cutlist available.
+				    	// if this is already 48 hours ago the download anyways
+				    	if((new Date().getTime() - recording.getFirstTried().getTime()) > TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
+				    	 	LOG.info("Found recording with " + recording.getId() + " that has not received a cutlist after 48 hours adding it to the download list");
+				    	 	recording.setDownloadNow();
+				    	 	_recordings.add(recording);
+				     	}  
+				     }
+				  } catch (IOException ex){
+					   
 				  }
 			   }
 			}
