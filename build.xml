@@ -18,8 +18,8 @@
     	<mkdir dir="build"/>
     </target>
 
-	<target name="build" depends="clean, mkdirs, compile, build.SaveTVDownloadManager, copytoproduction" />
-
+	<target name="build" depends="clean, mkdirs, compile, build.release, build.debug" />
+	
 	<target name="clean">
 		<delete dir="classes" />
 	</target>
@@ -37,11 +37,11 @@
         </javac>
 	</target>
 
-    <!-- Build the SaveTV Download Manager -->
-	<target name="build.SaveTVDownloadManager">
+    <!-- Build the release version of SaveTV Download Manager -->
+	<target name="build.release">
 		<mkdir dir="build"/>
-		<copy file="src/log4j.properties" tofile="classes/src/log4j.properties"/>
-		<one-jar destfile="build/SaveTVDownloadManager.jar">
+		<copy file="propertiefiles/log4j.info.properties" tofile="classes/src/log4j.properties"/>
+		<one-jar destfile="build/release/SaveTVDownloadManager.jar">
             <manifest>
                 <attribute name="Main-Class" value="com.ingo.savetv.Boot"/>
                 <attribute name="One-Jar-Main-Class" value="com.ingo.savetv.main.SaveTVDownloadManagerMain"/>
@@ -56,14 +56,25 @@
 		<delete dir="${temp.dir}" />
 	</target>
 	
-	<target name="copytoproduction">
-	  <copy file="build/SaveTVDownloadManager.jar" tofile="/Users/i809781/Downloads/SaveTV/SaveTVDownloadManager.jar"/>
+	<!-- Build the debug version of SaveTV Download Manager -->
+	<target name="build.debug">
+		<mkdir dir="build"/>
+		<copy file="propertiefiles/log4j.debug.properties" tofile="classes/src/log4j.properties"/>
+			<one-jar destfile="build/debug/SaveTVDownloadManager.jar">
+	            <manifest>
+	                <attribute name="Main-Class" value="com.ingo.savetv.Boot"/>
+	                <attribute name="One-Jar-Main-Class" value="com.ingo.savetv.main.SaveTVDownloadManagerMain"/>
+	            </manifest>
+	            <main>
+	                <fileset dir="classes/src"/>
+	            </main>
+	            <lib>
+	                <fileset dir="lib" includes="*.jar" />
+	            </lib>
+			</one-jar>
+			<delete dir="${temp.dir}" />			
 	</target>
+	
 
-    <property name="formatter" value="xml" />
-
-    <target name="run.SaveTVDownloadManager" depends="build" description="Run a One-Jar SaveTVDownloadManager">
-        <java fork="true" jar="build/SaveTVDownloadManager.jar"/>
-    </target>
 	
 </project>
