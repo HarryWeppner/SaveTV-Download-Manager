@@ -1,4 +1,4 @@
-package com.ingo.savetv;
+package com.ingo.savetv.http;
 
 import javax.net.ssl.X509TrustManager;
 

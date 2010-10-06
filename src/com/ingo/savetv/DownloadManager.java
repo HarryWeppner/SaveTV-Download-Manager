@@ -439,7 +439,7 @@ public class DownloadManager {
 				}
 
 				// close everything and finish up.
-				LOG.debug("Closing all download resources");
+				LOG.debug("Closing all connection resources");
 				_rcm.close();
 				_client.getConnectionManager().shutdown();
 				
@@ -501,13 +501,14 @@ public class DownloadManager {
     		BufferedInputStream bis = null;
     		String filename = null;
     		int    downloadstatus = ThreadScheduler.ABORDET;
+    	    HttpEntity _entity = null;
     		
     		// start downloading the video to the specified directory
   		    get = new HttpGet(_downloadURL);
     		try {
     		  
     		  HttpResponse response = _httpClient.execute(get);
-    		  HttpEntity _entity = response.getEntity();
+    		  _entity = response.getEntity();
     		  Header[] h = response.getHeaders("Content-Disposition");
               String headervalue = h[0].toString();
               headervalue.indexOf("=");
@@ -563,7 +564,8 @@ public class DownloadManager {
 	    		    out.write(block,0,bytes);
 	    		}
 	    		LOG.debug("run - Download is complete, going to call the ThreadSheduler telling him that we are done");
-    		  
+    		    get = null;
+	    		
     		    downloadstatus = ThreadScheduler.FINISHED_SUCCESSFUL;
     		
     		} catch (FileNotFoundException fex){
@@ -584,8 +586,8 @@ public class DownloadManager {
     				if(out != null) out.close();
     				if(bis != null) bis.close();
 				} catch (IOException e) { }
-				
-				LOG.debug("run - Calling the thread finished method on the theread scheduler");
+
+				LOG.debug("Thread " + this.getName() + ". is finished with status " + downloadstatus);
 				_scheduler.finished(downloadstatus,_id);
     		}
     		
