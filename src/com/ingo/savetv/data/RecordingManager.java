@@ -123,6 +123,7 @@ public abstract class RecordingManager {
 				     if(cut && dl.isAddFreeAvailable(recording.getId())){
 					    recording.setAddfree();
 					    recording.setDownloadNow();
+					    _recordings.add(recording);
 				     } else {					  
 				    	// check when we tried the first time to download the show but there was no cutlist available.
 				    	// if this is already 48 hours ago the download anyways

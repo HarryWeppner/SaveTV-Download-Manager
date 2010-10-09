@@ -420,17 +420,17 @@ public class DownloadManager {
 					if(recordings.size() > 1)
 					  LOG.info("Starting to download with " + pm.getNumberOfDownloadThreads() + " threads simultanously");
 					else
-					  LOG.info("Starting to download the one recording that was found.");
+					  LOG.info("Starting to download the one recording that was found");
 					
 					ThreadScheduler scheduler = new ThreadScheduler(_client, recordings, pm.getDownloadDirectory(), pm.getDbUsed());
 					// start the number of threads given in the arguments of the application
 					scheduler.start(pm.getNumberOfDownloadThreads());
 					
-					LOG.debug("Check whether the download thereads are still running");
+					LOG.debug("Going into a loop to wait for all download threads to finish");
 					// loop and sleep with this thread until all the download threads are done.
 					while(!scheduler.allThreadsDone()){
-						LOG.debug("Sleeping 1 Minute before checking again if all threads are done");
-						Thread.sleep(60000);
+						LOG.trace("Sleeping 2 Minutes before checking again if all threads are done");
+						Thread.sleep(120000);
 					}
 					LOG.info("Downloading finished");
 			
