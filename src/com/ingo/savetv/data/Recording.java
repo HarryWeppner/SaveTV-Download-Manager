@@ -17,20 +17,12 @@ public class Recording {
 	private boolean _complete = false;
 	private boolean _addfree = false;
 	private Date _firsttried = null;
-	private boolean _downloadnow = false;
 	
-	public boolean isDownloadNow() {
-		return _downloadnow;
-	}
-	public void setDownloadNow() {
-		this._downloadnow = true;
-	}
-
-	public boolean isAddfree() {
+	public boolean isAddFree() {
 		return _addfree;
 	}
-	public void setAddfree() {
-		this._addfree = true;
+	public void setAddFree(boolean exists) {
+		this._addfree = exists;
 	}
 	public String getId() {
 		return _id;
@@ -79,6 +71,16 @@ public class Recording {
 	}
 	public Date getFirstTried(){
 		return _firsttried;
+	}
+	
+	public String getTypeName(){
+		switch(_type){
+		  case 0: return "DivX Standard"; 
+		  case 1: return "DivX Standard"; 
+		  case 4: return "H.264 Mobile"; 
+		  case 5: return "H.264 Standard"; 
+		  default : return "No Type Set"; 
+		}
 	}
 	
 

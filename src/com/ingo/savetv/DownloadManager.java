@@ -11,9 +11,12 @@ import java.io.RandomAccessFile;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -178,6 +181,46 @@ public class DownloadManager {
 		
 	}
 	
+	private List<Recording> findRecordingIdsInPage(String page, boolean cut, boolean mobile){
+		Pattern MY_PATTERN = Pattern.compile("openWindow\\([0-9]+\\, [0,1]\\, -?[0,1]\\, [0-9]\\)");
+		Matcher m = MY_PATTERN.matcher(page);
+		List<Recording> recordings = new ArrayList<Recording>();
+		while(m.find()){
+			Recording recording = new Recording();
+			String s[] = m.group().split("[^0-9]+");
+			recording.setId(s[1]);
+			int recType = Integer.parseInt(s[4]);
+			switch(recType){
+			  case 0 : recording.setType(Recording.DIVX_STANDARD) ; break;
+			  case 1 : recording.setType(Recording.DIVX_STANDARD) ; break;
+			  case 4 : recording.setType(Recording.H264_MOBILE) ; break;
+			  case 5 : recording.setType(Recording.H264_STANDARD) ; break;
+			}
+			if(cut){
+		       try {
+			     if(isAddFreeAvailable(recording.getId())){
+		    		recording.setAddFree(true);
+		    	 } else {
+		    		recording.setAddFree(false);
+		    	 }
+			     recording.setFirstTried(new Date());
+			     
+		       } catch(IOException e){
+		    	   LOG.error("Error trying to determine if there is an add free version availiable. Setting the flag to NO");
+		    	   recording.setAddFree(false);
+		    	   recording.setFirstTried(new Date());
+		       }
+	    	} else {
+	    		 recording.setAddFree(false);
+			}
+			if((recType != Recording.H264_MOBILE) || ((recType == Recording.H264_MOBILE) && mobile)){
+			    recordings.add(recording);
+                LOG.info("Found recording of type " + recording.getTypeName() + " with ID: " + recording.getId());
+			}
+		}
+		return recordings;
+	}
+	
     /**
      * Makes a request to Save.TV to get the download URL for a recording that was previously found in the HTTP
      * Website.
@@ -201,7 +244,7 @@ public class DownloadManager {
 		    formparams.add(new BasicNameValuePair("c0-param1", "number:0"));
 		else
 		    formparams.add(new BasicNameValuePair("c0-param1", "number:1"));
-		if(recording.isAddfree())
+		if(recording.isAddFree())
 			formparams.add(new BasicNameValuePair("c0-param2", "boolean:true"));
 		else
 			formparams.add(new BasicNameValuePair("c0-param2", "boolean:false"));
@@ -286,10 +329,7 @@ public class DownloadManager {
 			sb = null;
 			int start = inputLine.indexOf("_4127_12795177172 = '1';");
 			if(start > 0){
-				LOG.info("Found an add free version for recording ID: " + recordingid + " adding it to the dowload list");
 				addfreethere =  true;
-			} else {
-				LOG.info("No add free version avaiable for recording " + recordingid + " skipping recording for mow");
 			}
 		}
 		return addfreethere;
@@ -379,48 +419,24 @@ public class DownloadManager {
 				// that are already downloaded and only add the ones that are new to the list of recordings to download.
 				LOG.debug("Initialize Recording Manager");
 				_rcm = RecordingManagerFactory.getInstance(pm.getDbUsed());
-				List<Recording> recordings = _rcm.findNewRecordings(content, pm.getMobileVersion(), pm.isCut(), this);
-				// set the content to null so it can be removed
+				List<Recording> recordings = this.findRecordingIdsInPage(content, pm.isCut(), pm.getMobileVersion());
 				content = null;
-				LOG.debug("Initialize Recording Manager complete");
-			
-				boolean removeFromList = false;
+				
+				recordings = _rcm.alignWithDB(recordings);
+				
+				// set the content to null so it can be removed
+				LOG.debug("After checking the content against the database we have " + recordings.size() + " to download");
 				if(recordings.size() > 0){
 					// Loop over all the recordings that we want to download now and that match the parameters there where
 					// specified on the commandline.
 					LOG.info("Looking for download URLs for new recordings");
 					for(Iterator<Recording> it = recordings.iterator(); it.hasNext(); ){
 						Recording recording = it.next();
-	                    removeFromList = false;
-						if(recording.isDownloadNow()){
-							try {					   
-								recording.setDownloadURL(getDownloadURL(recording));
-							} catch(SaveTVResponseException stvex){
-								LOG.debug(stvex.getMessage());					   
-                                removeFromList = true;
-							}
-						} else {
-						  
-						  // just write the newly found entry that is not yet ready for download to the db. After insert
-					      // remove it from the list of recordings to download
-							   _rcm.insert(recording);
-							   removeFromList = true;
-						}
-						// remove the recording from the list of recording that are to be downloaed either because there was an error
-						// finding the download url or because -cut was specified and there was actually no cutlist available at the moment
-						if(removeFromList){
-							// remove the recording that we just iterate over from the list of recordings as we are not
-							// downloading it now.
-							it.remove();
-						}
+						recording.setDownloadURL(getDownloadURL(recording));
 					}	
 					
-					// Create a new ThreadScheduler that will initially start the number of threads given, restarting a new
-					// one as soon as an old one finishes up. This is done as long as there are recordings to download
-					if(recordings.size() > 1)
-					  LOG.info("Starting to download with " + pm.getNumberOfDownloadThreads() + " threads simultanously");
-					else
-					  LOG.info("Starting to download the one recording that was found");
+
+				    LOG.info("Starting to download the " + recordings.size() + " recording that where found");
 					
 					ThreadScheduler scheduler = new ThreadScheduler(_client, recordings, pm.getDownloadDirectory(), pm.getDbUsed());
 					// start the number of threads given in the arguments of the application
@@ -432,7 +448,6 @@ public class DownloadManager {
 						LOG.trace("Sleeping 2 Minutes before checking again if all threads are done");
 						Thread.sleep(120000);
 					}
-					LOG.info("Downloading finished");
 			
 				} else {
 					LOG.info("No new recordings where found. Nothing to do here");
@@ -579,7 +594,10 @@ public class DownloadManager {
     		} catch (IOException iox) {
     			get.abort();
     			downloadstatus = ThreadScheduler.ABORDET;
-    			LOG.error("Some other problem that caused an IO Exception " + iox.getMessage());   			
+    			LOG.error("Some other problem that caused an IO Exception " + iox.getMessage());    			
+    		} catch (Exception ex) {
+    			get.abort();
+    			LOG.error("Some error happened that we caught with the basic exception " + ex.getMessage());
     		} finally {
     			
     			try {
