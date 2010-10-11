@@ -1,18 +1,14 @@
 package com.ingo.savetv.data;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import com.ingo.savetv.DownloadManager;
 
 
 public abstract class RecordingManager {
@@ -69,78 +65,43 @@ public abstract class RecordingManager {
 	}
 	
 	/**
-	 *  Searches the website for new recordings. This is currently done with a pretty primitive approach that
-	 *  searches for a "openWindow(" string followed by numbers. The first number is the ID of the recording
-	 *  the second number is apparently some old format information that seems to be not used any more the
-	 *  third one specifies whether there is an addFree version available or at least if there potentially
-	 *  is one available and the last number is the format Type
+	 * Checks a list of recordings against the database. the input List of recordings is expected to have
+	 * the ID and the Type of the recording filled at a minimum for the method to work correctly. The method
+	 * tries goes over all recordings trying to find them in the database. If it can find them it checks 
+	 * whether the recordings was already successfully downloaded. If yes it removes the recording from the list.
+	 * If the recording has not been downloaded we check if there is an entry for the recording availiable alread
+	 * 	
+	 * @param recordings List of recordings to check against the database
+	 * @return recordings List of recordings that should be downloaded 
 	 */
-	public List<Recording> findNewRecordings(String htmlpage, boolean mobile, boolean cut, DownloadManager dl){
-		Pattern MY_PATTERN = Pattern.compile("openWindow\\([0-9]+\\, [0,1]\\, -?[0,1]\\, [0-9]\\)");
-		Matcher m = MY_PATTERN.matcher(htmlpage);
-		while(m.find()){
-			Recording recording = new Recording();
-			String s[] = m.group().split("[^0-9]+");
-			String recordingId = s[1];
-			int recordingType = Integer.parseInt(s[4]);;
-			
-			recording = this.find(recordingId, recordingType);
-		    if(recording == null){
-		    	recording = new Recording();
-		        recording.setId(recordingId);
-		        recording.setType(recordingType);
-				// Only use the mobile recoridngs if the mobile parameter was used 
-				if((recordingType != Recording.H264_MOBILE) || ((recordingType == Recording.H264_MOBILE) && mobile)){
-                    LOG.debug("Found recording of type : " + recordingType + " while the mobile switch is set to:" + mobile);
-					if(s[3].equals("0")){ 
-						LOG.info("Found DIVX verion for recording " + recordingId + " skiping the check for add free version");
-						recording.setDownloadNow();
-					} else {
-						// now that we found out that add free versions are in general available let's make sure there really is
-						// already an add free version there.
-						try {
-							if(cut && dl.isAddFreeAvailable(recording.getId())){
-								recording.setFirstTried(new Date());
-								recording.setAddfree();
-								recording.setDownloadNow();
-							} else {
-							 // since there is not add free version available let's find out about the current date and time and store it
-							 // in the record so that next time around we can check against this date when the recording should be downloaded
-						     // no matter whether there is a recording or not
-								recording.setFirstTried(new Date());
-								LOG.info("Found a recording " + recording.getId() + " that has no cutlist yet not adding it to the download list yet");
-							}	
-						} catch (IOException ex){}
+	public List<Recording> alignWithDB(List<Recording> recordings){
+		Recording returnrec = null;
+		
+		for(Iterator<Recording> it = recordings.iterator(); it.hasNext(); ){
+			Recording recording = it.next();
+			returnrec = this.find(recording.getId(), recording.getType());
+			if(!returnrec.isComplete()){
+				if(returnrec.getId() == null){
+					try {
+				        this.insert(recording);
+					} catch (SQLException e) {
+						LOG.error("Error when trying to insert the new recording with id " + recording.getId() + " into the db. The error was " + e.getMessage());
 					}
-	                _recordings.add(recording);
-				}	
+				} else {
+			    	// check if the 48 hours timespan from the first try to find a custlist is expired. If yes download
+			    	// the recording no matter whether we do have a cutlist or not
+			    	if((new Date().getTime() - returnrec.getFirstTried().getTime()) > TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
+			    	 	LOG.info("Found recording with " + returnrec.getId() + " that after 48 hours still has no cutlist. Adding it to the download list for download without cutlist");
+			    	} else {
+			    		it.remove();
+			    	}  	
+				}
 				
-			}  else {
-
-			   if(!recording.isComplete()){
-				  // check if there is a add free version available now. if yes add it to the download list
-				  try {
-				     if(cut && dl.isAddFreeAvailable(recording.getId())){
-					    recording.setAddfree();
-					    recording.setDownloadNow();
-					    _recordings.add(recording);
-				     } else {					  
-				    	// check when we tried the first time to download the show but there was no cutlist available.
-				    	// if this is already 48 hours ago the download anyways
-				    	if((new Date().getTime() - recording.getFirstTried().getTime()) > TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
-				    	 	LOG.info("Found recording with " + recording.getId() + " that has not received a cutlist after 48 hours adding it to the download list");
-				    	 	recording.setDownloadNow();
-				    	 	_recordings.add(recording);
-				     	}  
-				     }
-				  } catch (IOException ex){
-					   
-				  }
-			   }
+			} else {
+				it.remove();
 			}
-
 		}
-		return _recordings; 
+		return recordings;
 	}
 
 	

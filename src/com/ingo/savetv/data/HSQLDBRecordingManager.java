@@ -35,7 +35,7 @@ public class HSQLDBRecordingManager extends RecordingManager {
 		try {
 			
 	        conn = DriverManager.getConnection("jdbc:hsqldb:file:" + _DB, "SA", "");
-	        conn.setAutoCommit(false);
+	        // conn.setAutoCommit(false);
 	        if(!this.tablesExist())
 	           this.initialize();
 	        
@@ -71,8 +71,8 @@ public class HSQLDBRecordingManager extends RecordingManager {
 	}
 	
 	public Recording find(String id, int type){
+		Recording recording = new Recording();
 		try {
-			Recording recording = new Recording();
 		    Statement st = conn.createStatement();
 	        String query = "SELECT * FROM recordings WHERE id = '" + id + "' AND filetype = '" + type + "'";
 		    ResultSet res = st.executeQuery(query);
@@ -87,18 +87,17 @@ public class HSQLDBRecordingManager extends RecordingManager {
 		    	recording.setFilename(res.getString("filename"));
 		    	recording.setFirstTried(new Date(res.getTimestamp("firsttry").getTime()));
 		    } else {
-		        recording = null;
+		        recording = new Recording();
 		    }
 		    res.close();
 		    st.close();
 		    res = null;
 		    st = null;
-		    
-		    return recording;   
+		      
 		} catch (SQLException sqlex){
 			LOG.error("Java exception " + sqlex.getMessage() + " was thrown with with SQL message " + sqlex.getSQLState());
-			return null;
 		}
+		return recording;
 	}
 
 		
@@ -120,10 +119,12 @@ public class HSQLDBRecordingManager extends RecordingManager {
 			
 			LOG.debug(sb.toString());
 			st.execute(sb.toString());
+			conn.commit();
+			
 			st.close();
 			st = null;
 			
-			conn.commit();
+
 	}
 	
 	public void insert(List<Recording> recordings) throws SQLException{
@@ -157,15 +158,18 @@ public class HSQLDBRecordingManager extends RecordingManager {
 			
 			// execute the insert statement
 			st.executeUpdate(sb.toString());
+			conn.commit();
+			
 			st.close();
 			st = null;
-			
-			conn.commit();
+
 	}
 	
 	public void clean() throws SQLException {
 			Statement st = conn.createStatement();
 			st.executeUpdate("DELETE from recordings");
+			conn.commit();
+			
 			st.close();
 			st = null;
 	}

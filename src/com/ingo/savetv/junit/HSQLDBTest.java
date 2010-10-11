@@ -12,25 +12,10 @@ import com.ingo.savetv.data.RecordingManagerFactory;
 
 public class HSQLDBTest extends TestCase {
 	
-	private Recording rec = new Recording();
-	private RecordingManager _rcm = RecordingManagerFactory.getInstance(RecordingManager.HSQLDB);
+	private static RecordingManager _rcm = RecordingManagerFactory.getInstance(RecordingManager.HSQLDB);
 	
 	public HSQLDBTest(String name){
 		super(name);
-		rec.setId("123456");
-		rec.setAddfree();
-		rec.setDescription("This is a simple descriptino for a recording");
-		rec.setDownloadURL("http://cs53.save.tv/DL0030000399930003993?");
-		rec.setFilename("The_filename_of_the_recording_that_was_downloaded.mp4");
-		Date d = new Date();
-		rec.setFirstTried(d);
-		rec.setTitle("Krieg und Frieden");
-		rec.setType(Recording.H264_STANDARD);
-		try {
-		  _rcm.clean();
-		} catch (SQLException sqlx){
-			System.out.println(sqlx);
-		}
 	}
 
 	 /**
@@ -48,13 +33,35 @@ public class HSQLDBTest extends TestCase {
 		super.tearDown();
 	}
 	
+	public void testInitialize(){
+		try {
+		   _rcm.clean();
+		} catch(SQLException e){
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
 	public void testInsert(){
+		
+		Recording rec = new Recording();
+		
+		rec.setId("123456");
+		rec.setAddFree(true);
+		rec.setDescription("This is a simple descriptino for a recording");
+		rec.setDownloadURL("http://cs53.save.tv/DL0030000399930003993?");
+		rec.setFilename("The_filename_of_the_recording_that_was_downloaded.mp4");
+		Date d = new Date();
+		rec.setFirstTried(d);
+		rec.setTitle("Krieg und Frieden");
+		rec.setType(Recording.H264_STANDARD);
+		
 
 		try {
 		  _rcm.insert(rec);
-		} catch (SQLException sqlx){
-			System.out.println(sqlx);
-			
+		} catch (SQLException e){
+			System.out.println(e.getMessage());
+			e.printStackTrace();
 		}
 		
 		Recording recording = _rcm.find(rec.getId(), rec.getType());
@@ -68,15 +75,19 @@ public class HSQLDBTest extends TestCase {
 	
 	public void testUpdate(){
 		
-	    rec.setTitle("Nochmal ein Test");
-	    rec.setComplete();
-	    try {
-	      _rcm.update(rec);
-	    } catch (SQLException sqlx){
-	    	System.out.println(sqlx);
+		Recording rec = new Recording();
+		
+	    Recording recording = _rcm.find("123456", Recording.H264_STANDARD);	
+	    if(recording.getId() != null){
+	      rec.setTitle("Nochmal ein Test");
+	      rec.setComplete();
+	      try {
+	        _rcm.update(rec);
+	      } catch (SQLException e){
+				System.out.println(e.getMessage());
+				e.printStackTrace();
+	      }
 	    }
-	    
-	    Recording recording = _rcm.find(rec.getId(), rec.getType());
 	    
 	    assertTrue("Expected non-null result", recording != null);
 	    assertEquals("Wrong Title ", "Nochmal ein Test", recording.getTitle());

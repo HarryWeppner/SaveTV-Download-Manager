@@ -85,7 +85,7 @@ public class MySQLRecordingManager extends RecordingManager {
 		    	recording.setFilename(res.getString("filename"));
 		    	recording.setFirstTried(new Date(res.getDate("firsttry").getTime()));
 		    } else {
-		        recording = null;
+		        recording = new Recording();
 		    }
 		    res.close();
 		    st.close();
