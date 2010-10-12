@@ -5,6 +5,10 @@ import java.util.Date;
 
 import junit.framework.TestCase;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.ingo.savetv.data.Recording;
 import com.ingo.savetv.data.RecordingManager;
 import com.ingo.savetv.data.RecordingManagerFactory;
@@ -21,6 +25,7 @@ public class HSQLDBTest extends TestCase {
 	 /**
 	  * setUp() method that initialized common objects
 	  */
+	@Before
 	protected void setUp() throws Exception {
 		super.setUp();
 
@@ -29,10 +34,12 @@ public class HSQLDBTest extends TestCase {
 	/**
 	 * tearDown() method that cleanup the common objects
 	 */
+	@After
 	protected void tearDown() throws Exception {
 		super.tearDown();
 	}
 	
+	@Test
 	public void testInitialize(){
 		try {
 		   _rcm.clean();
@@ -42,6 +49,7 @@ public class HSQLDBTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testInsert(){
 		
 		Recording rec = new Recording();
@@ -73,16 +81,15 @@ public class HSQLDBTest extends TestCase {
 		
 	}
 	
+	@Test
 	public void testUpdate(){
-		
-		Recording rec = new Recording();
 		
 	    Recording recording = _rcm.find("123456", Recording.H264_STANDARD);	
 	    if(recording.getId() != null){
-	      rec.setTitle("Nochmal ein Test");
-	      rec.setComplete();
+	      recording.setTitle("Nochmal ein Test");
+	      recording.setComplete();
 	      try {
-	        _rcm.update(rec);
+	        _rcm.update(recording);
 	      } catch (SQLException e){
 				System.out.println(e.getMessage());
 				e.printStackTrace();
