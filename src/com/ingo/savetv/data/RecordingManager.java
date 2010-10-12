@@ -84,6 +84,7 @@ public abstract class RecordingManager {
 				if(returnrec.getId() == null){
 					try {
 				        this.insert(recording);
+				        it.remove();
 					} catch (SQLException e) {
 						LOG.error("Error when trying to insert the new recording with id " + recording.getId() + " into the db. The error was " + e.getMessage());
 					}

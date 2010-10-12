@@ -2,6 +2,8 @@ package com.ingo.savetv.junit;
 
 import junit.framework.TestCase;
 
+import com.ingo.savetv.data.Recording;
+
 public class RecordingTest extends TestCase {
 	
 	public RecordingTest(){
@@ -13,6 +15,14 @@ public class RecordingTest extends TestCase {
 	}
 	
 	protected void tearDown() throws Exception {
+		
+	}
+	
+	public void testRecordingMatch(){
+		
+		Recording rec = new Recording();
+		
+		
 		
 	}
 
