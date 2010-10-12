@@ -1,12 +1,14 @@
 package com.ingo.savetv.junit;
 
+
+
+import static org.junit.Assert.*;
+
 import java.sql.SQLException;
 import java.util.Date;
 
-import junit.framework.TestCase;
-
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ingo.savetv.data.Recording;
@@ -14,43 +16,39 @@ import com.ingo.savetv.data.RecordingManager;
 import com.ingo.savetv.data.RecordingManagerFactory;
 
 
-public class HSQLDBTest extends TestCase {
+public class HSQLDBTest {
 	
 	private static RecordingManager _rcm = RecordingManagerFactory.getInstance(RecordingManager.HSQLDB);
 	
-	public HSQLDBTest(String name){
-		super(name);
-	}
-
 	 /**
 	  * setUp() method that initialized common objects
 	  */
-	@Before
-	protected void setUp() throws Exception {
-		super.setUp();
-
+	@BeforeClass
+	protected void setUpClass() throws Exception {
+		try {
+			_rcm.clean();
+		} catch(SQLException e){
+		    System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 	
 	/**
 	 * tearDown() method that cleanup the common objects
 	 */
-	@After
-	protected void tearDown() throws Exception {
-		super.tearDown();
-	}
-	
-	@Test
-	public void testInitialize(){
+	@AfterClass
+	protected void tearDownClass() throws Exception {
 		try {
-		   _rcm.clean();
+			_rcm.clean();
 		} catch(SQLException e){
-			System.out.println(e.getMessage());
+		    System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
 	}
 	
+	
 	@Test
-	public void testInsert(){
+	public void insert(){
 		
 		Recording rec = new Recording();
 		
@@ -82,7 +80,7 @@ public class HSQLDBTest extends TestCase {
 	}
 	
 	@Test
-	public void testUpdate(){
+	public void update(){
 		
 	    Recording recording = _rcm.find("123456", Recording.H264_STANDARD);	
 	    if(recording.getId() != null){
