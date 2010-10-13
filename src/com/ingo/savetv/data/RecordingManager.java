@@ -74,7 +74,7 @@ public abstract class RecordingManager {
 	 * @param recordings List of recordings to check against the database
 	 * @return recordings List of recordings that should be downloaded 
 	 */
-	public List<Recording> alignWithDB(List<Recording> recordings){
+	public List<Recording> alignWithDB(List<Recording> recordings, boolean removeUncut){
 		Recording returnrec = null;
 		
 		for(Iterator<Recording> it = recordings.iterator(); it.hasNext(); ){
@@ -84,7 +84,8 @@ public abstract class RecordingManager {
 				if(returnrec.getId() == null){
 					try {
 				        this.insert(recording);
-				        it.remove();
+				        if(!recording.isAddFree() && removeUncut)
+				            it.remove();
 					} catch (SQLException e) {
 						LOG.error("Error when trying to insert the new recording with id " + recording.getId() + " into the db. The error was " + e.getMessage());
 					}
