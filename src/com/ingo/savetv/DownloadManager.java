@@ -530,8 +530,12 @@ public class DownloadManager {
               filename = headervalue.substring(headervalue.indexOf("=") + 1, headervalue.length());
               
               // append the word Mobile at the begining of all the mobile files that we download
-              if(_type == Recording.H264_MOBILE)
-            	  filename = "Mobile_" + filename;
+              if(_type == Recording.H264_MOBILE){
+                  int len = filename.length() - 4;
+                  String tmp = filename.substring(0, len);
+                  String ending = filename.substring(len);
+                  filename = tmp + "_mobile" + ending; 
+              }
               
               // let's check if the file exist alread on the harddrive. That is usually a partial download
               // as with complete downloads being marked in the database we would not get here with a completed
@@ -542,6 +546,7 @@ public class DownloadManager {
 	    		  Random generator = new Random();
 	    		  filename = _folder + "/no_filename_found_ " + generator.nextInt(99999) + ".mp4";
 	    	  }
+              LOG.info("Starting to download recording " + filename );
               
               File f = new File(filename);
               long filesize = 0;
