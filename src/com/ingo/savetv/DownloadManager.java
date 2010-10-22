@@ -215,11 +215,7 @@ public class DownloadManager {
 			}
 			if((recType != Recording.H264_MOBILE) || ((recType == Recording.H264_MOBILE) && mobile)){
 			    recordings.add(recording);
-<<<<<<< HEAD
                 LOG.info("Found recording in html page of type " + recording.getTypeName() + " with ID: " + recording.getId());
-=======
-                LOG.info("Found recording of type " + recording.getTypeName() + " with ID: " + recording.getId());
->>>>>>> fc76003a7b9552fb936ba6d6478fe2581373f9e2
 			}
 		}
 		return recordings;
@@ -425,12 +421,9 @@ public class DownloadManager {
 				_rcm = RecordingManagerFactory.getInstance(pm.getDbUsed());
 				List<Recording> recordings = this.findRecordingIdsInPage(content, pm.isCut(), pm.getMobileVersion());
 				content = null;
-				
-<<<<<<< HEAD
-				recordings = _rcm.alignWithDB(recordings, pm.isCut());
-=======
+			
 				recordings = _rcm.alignWithDB(recordings);
->>>>>>> fc76003a7b9552fb936ba6d6478fe2581373f9e2
+
 				
 				// set the content to null so it can be removed
 				LOG.debug("After checking the content against the database we have " + recordings.size() + " to download");
@@ -485,8 +478,7 @@ public class DownloadManager {
 		private final ThreadScheduler _scheduler;
 		private final String _downloadURL;
 		private final String _folder;
-		private String _id;
-		private int _type;
+		private Recording _recording;
 
 		/**
 		 * 
@@ -500,12 +492,11 @@ public class DownloadManager {
 			this._downloadURL = recording.getDownloadURL();
 			this._folder = folder;
 			this._scheduler = scheduler;
-			this._id = recording.getId();
-			this._type = recording.getType();
+            this._recording = recording;
 		}
 		
 		public String getRecordingId(){
-			return _id;
+			return _recording.getId();
 		}
 		
 		/**
@@ -528,6 +519,8 @@ public class DownloadManager {
     		
     		// start downloading the video to the specified directory
   		    get = new HttpGet(_downloadURL);
+  		    // tell the client to give up listenting after a minute on the socked if there is no data coming across any more
+            get.getParams().setParameter("http.socket.timeout", new Integer(30000));
     		try {
     		  
     		  HttpResponse response = _httpClient.execute(get);
@@ -538,12 +531,13 @@ public class DownloadManager {
               filename = headervalue.substring(headervalue.indexOf("=") + 1, headervalue.length());
               
               // append the word Mobile at the begining of all the mobile files that we download
-              if(_type == Recording.H264_MOBILE){
+              if(_recording.getType() == Recording.H264_MOBILE){
                   int len = filename.length() - 4;
                   String tmp = filename.substring(0, len);
                   String ending = filename.substring(len);
                   filename = tmp + "_mobile" + ending; 
               }
+              LOG.info("Starting to download recording " + filename );
               
               // let's check if the file exist alread on the harddrive. That is usually a partial download
               // as with complete downloads being marked in the database we would not get here with a completed
@@ -554,7 +548,7 @@ public class DownloadManager {
 	    		  Random generator = new Random();
 	    		  filename = _folder + "/no_filename_found_ " + generator.nextInt(99999) + ".mp4";
 	    	  }
-              LOG.info("Starting to download recording " + filename );
+              
               
               File f = new File(filename);
               long filesize = 0;
@@ -567,6 +561,8 @@ public class DownloadManager {
                   // where we left off the download the last time.
                   get.abort();
                   get = new HttpGet(_downloadURL);
+                  // tell the client to give up listenting after a minute on the socked if there is no data coming across any more
+                  get.getParams().setParameter("http.socket.timeout", new Integer(30000));
 
                   
                   get.addHeader("Range", "bytes=" + filesize + "-");
@@ -610,7 +606,9 @@ public class DownloadManager {
     			LOG.error("Some other problem that caused an IO Exception " + iox.getMessage());    			
     		} catch (Exception ex) {
     			get.abort();
-    			LOG.error("Some error happened that we caught with the basic exception " + ex.getMessage());
+    			LOG.error("Some error happened when downloading recording with ID: " + _recording.getId() + ". The message was: " + ex.getMessage());
+    			LOG.error(ex.getStackTrace().toString());
+    			ex.printStackTrace();
     		} finally {
     			
     			try {
@@ -618,8 +616,8 @@ public class DownloadManager {
     				if(bis != null) bis.close();
 				} catch (IOException e) { }
 
-				LOG.debug("Thread " + this.getName() + ". is finished with status " + downloadstatus);
-				_scheduler.finished(downloadstatus,_id);
+				LOG.debug("Thread " + this.getName() + ". is finished with status " + downloadstatus + " for recording with ID:" + _recording.getId());
+				_scheduler.finished(downloadstatus, _recording);
     		}
     		
         }

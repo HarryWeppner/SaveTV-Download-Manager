@@ -19,14 +19,7 @@ import com.ingo.savetv.data.RecordingManagerFactory;
 public class HSQLDBTest {
 	
 	private static RecordingManager _rcm = RecordingManagerFactory.getInstance(RecordingManager.HSQLDB);
-	
-<<<<<<< HEAD:tests/com/ingo/savetv/junit/HSQLDBTest.java
-=======
-	public HSQLDBTest(String name){
-		super(name);
-	}
 
->>>>>>> fc76003a7b9552fb936ba6d6478fe2581373f9e2:src/com/ingo/savetv/junit/HSQLDBTest.java
 	 /**
 	  * setUp() method that initialized common objects
 	  */
@@ -53,12 +46,8 @@ public class HSQLDBTest {
 		}
 	}
 	
-<<<<<<< HEAD:tests/com/ingo/savetv/junit/HSQLDBTest.java
-	
 	@Test
 	public void insert(){
-=======
-	public void testInitialize(){
 		try {
 		   _rcm.clean();
 		} catch(SQLException e){
@@ -68,7 +57,6 @@ public class HSQLDBTest {
 	}
 	
 	public void testInsert(){
->>>>>>> fc76003a7b9552fb936ba6d6478fe2581373f9e2:src/com/ingo/savetv/junit/HSQLDBTest.java
 		
 		Recording rec = new Recording();
 		
@@ -101,15 +89,6 @@ public class HSQLDBTest {
 	
 	@Test
 	public void update(){
-		
-<<<<<<< HEAD:tests/com/ingo/savetv/junit/HSQLDBTest.java
-	    Recording recording = _rcm.find("123456", Recording.H264_STANDARD);	
-	    if(recording.getId() != null){
-	      recording.setTitle("Nochmal ein Test");
-	      recording.setComplete();
-	      try {
-	        _rcm.update(recording);
-=======
 		Recording rec = new Recording();
 		
 	    Recording recording = _rcm.find("123456", Recording.H264_STANDARD);	
@@ -118,7 +97,6 @@ public class HSQLDBTest {
 	      rec.setComplete();
 	      try {
 	        _rcm.update(rec);
->>>>>>> fc76003a7b9552fb936ba6d6478fe2581373f9e2:src/com/ingo/savetv/junit/HSQLDBTest.java
 	      } catch (SQLException e){
 				System.out.println(e.getMessage());
 				e.printStackTrace();

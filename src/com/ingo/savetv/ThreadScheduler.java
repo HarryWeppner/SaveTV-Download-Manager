@@ -122,25 +122,19 @@ public class ThreadScheduler {
 		
 	}
 	
-	synchronized public void finished(int status, String id){
+	synchronized public void finished(int status, Recording rec){
 		// if the video downloaded successful remove the video from the list and
 		// update the database that the video download was successful
 		if(status == FINISHED_SUCCESSFUL){
 			
-		    LOG.info("The recording with id " + id + " was downloaded sucessfully");
+		    LOG.info("The recording with id " + rec.getId() + " was downloaded sucessfully to " + rec.getFilename());
 		    // now find the video with the respective ID again and remove it from the list
-			// find out which of the threads was successful and update the database accordingly
-			for(Recording recording : _recordings){
-				if(recording.getId().equals(id)){
-				    try{
-						recording.setComplete();	
-					    _rcm.update(recording);
-				    } catch (SQLException ex){
-				    	LOG.error("Error when trying to set the recording with id " + recording.getId() + " to complete.");
-				    	LOG.error(ex.getMessage());
-				    }
-					break;
-				}
+			// find out which of the threads was successful and update the database accordingly	
+		    try {
+			    _rcm.update(rec);
+			} catch (SQLException ex){
+				LOG.error("Error when trying to set the recording with id " + rec.getId() + " to complete.");
+				LOG.error(ex.getMessage());
 			}
 		}
 		numberOfRunningThreads--;
