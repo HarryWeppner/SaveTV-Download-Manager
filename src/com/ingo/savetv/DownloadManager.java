@@ -449,6 +449,16 @@ public class DownloadManager {
 						LOG.trace("Sleeping 2 Minutes before checking again if all threads are done");
 						Thread.sleep(120000);
 					}
+					
+					// if the Delete Recording parameter is set go ahead and delete all recordings that are marked as finished
+					if(pm.isDeleteRecordings()){
+						for(Iterator<Recording> it = recordings.iterator();it.hasNext();){
+							Recording rec = it.next();
+							if(rec.isComplete())
+							   this.deleteVideo(rec.getId());
+						}
+						
+					}
 			
 				} else {
 					LOG.info("No new recordings where found. Nothing to do here");
@@ -538,6 +548,7 @@ public class DownloadManager {
                   filename = tmp + "_mobile" + ending; 
               }
               LOG.info("Starting to download recording " + filename );
+              _recording.setFilename(filename);
               
               // let's check if the file exist alread on the harddrive. That is usually a partial download
               // as with complete downloads being marked in the database we would not get here with a completed
@@ -599,11 +610,11 @@ public class DownloadManager {
     		} catch (ClientProtocolException e) {
     			get.abort();
     			downloadstatus = ThreadScheduler.ABORDET;
-    			LOG.error("Some problem with the http client connection " + e.getMessage());
+    			LOG.error("Some problem with the http client connection. The message was:  " + e.getMessage());
     		} catch (IOException iox) {
     			get.abort();
     			downloadstatus = ThreadScheduler.ABORDET;
-    			LOG.error("Some other problem that caused an IO Exception " + iox.getMessage());    			
+    			LOG.error("Some other problem that caused an IO Exception. The message was: " + iox.getMessage());    			
     		} catch (Exception ex) {
     			get.abort();
     			LOG.error("Some error happened when downloading recording with ID: " + _recording.getId() + ". The message was: " + ex.getMessage());
