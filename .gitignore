@@ -2,7 +2,11 @@
 /bin
 /data
 /classes
+<<<<<<< HEAD
 /data
 /logs
 /.settings
 /build
+=======
+/logs
+>>>>>>> 3e4ff303d3e34230d3d3382d4767b6eff80bd2bd
