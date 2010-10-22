@@ -118,8 +118,12 @@ public class HSQLDBRecordingManager extends RecordingManager {
 			sb.append("'");
 			
 			LOG.debug(sb.toString());
+<<<<<<< HEAD
 			String strsql = sb.toString();
 			st.execute(strsql);
+=======
+			st.execute(sb.toString());
+>>>>>>> fc76003a7b9552fb936ba6d6478fe2581373f9e2
 			conn.commit();
 			
 			st.close();

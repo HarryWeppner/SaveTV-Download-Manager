@@ -215,7 +215,11 @@ public class DownloadManager {
 			}
 			if((recType != Recording.H264_MOBILE) || ((recType == Recording.H264_MOBILE) && mobile)){
 			    recordings.add(recording);
+<<<<<<< HEAD
                 LOG.info("Found recording in html page of type " + recording.getTypeName() + " with ID: " + recording.getId());
+=======
+                LOG.info("Found recording of type " + recording.getTypeName() + " with ID: " + recording.getId());
+>>>>>>> fc76003a7b9552fb936ba6d6478fe2581373f9e2
 			}
 		}
 		return recordings;
@@ -422,7 +426,11 @@ public class DownloadManager {
 				List<Recording> recordings = this.findRecordingIdsInPage(content, pm.isCut(), pm.getMobileVersion());
 				content = null;
 				
+<<<<<<< HEAD
 				recordings = _rcm.alignWithDB(recordings, pm.isCut());
+=======
+				recordings = _rcm.alignWithDB(recordings);
+>>>>>>> fc76003a7b9552fb936ba6d6478fe2581373f9e2
 				
 				// set the content to null so it can be removed
 				LOG.debug("After checking the content against the database we have " + recordings.size() + " to download");
