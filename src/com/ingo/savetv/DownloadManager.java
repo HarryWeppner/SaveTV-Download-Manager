@@ -309,9 +309,10 @@ public class DownloadManager {
 		UrlEncodedFormEntity ent = new UrlEncodedFormEntity(formparams, "UTF-8");	
 		HttpPost httppost = new HttpPost("http://www.save.tv/STV/M/obj/cRecordOrder/croGetAdFreeAvailable.cfm?null.GetAdFreeAvailable");
 		httppost.setEntity(ent); 
-		 
-		HttpResponse response = _client.execute(httppost);
+
 		_entity = null;
+		HttpResponse response = _client.execute(httppost);
+
 		_entity = response.getEntity();
 		StringBuffer sb = new StringBuffer();
 		String inputLine = null;
@@ -337,7 +338,7 @@ public class DownloadManager {
 	
 		
 	public boolean deleteVideo(String recordingid) throws IllegalStateException, IOException{
-	     
+		
 		LOG.info("Start: delete recording at Save.TV with ID: " + recordingid);
 		List<NameValuePair> formparams = new ArrayList<NameValuePair>();
 		formparams.add(new BasicNameValuePair("iFilterType", "1"));
@@ -349,21 +350,23 @@ public class DownloadManager {
 		formparams.add(new BasicNameValuePair("iRecordingState", "1"));
 		formparams.add(new BasicNameValuePair("iPageNumber", "1"));
 		formparams.add(new BasicNameValuePair("sSortOrder", ""));
-		formparams.add(new BasicNameValuePair("ITelecastID", recordingid));
+		formparams.add(new BasicNameValuePair("lTelecastID", recordingid));
 		UrlEncodedFormEntity ent = new UrlEncodedFormEntity(formparams, "UTF-8");	
 		HttpPost httppost = new HttpPost("http://www.save.tv/STV/M/obj/user/usShowVideoArchive.cfm");
 		httppost.setEntity(ent); 
-		 
-		HttpResponse response = _client.execute(httppost);
+
 		_entity = null;
+		HttpResponse response = _client.execute(httppost);
 		_entity = response.getEntity();
 		if(_entity != null){
 			BufferedReader reader = new BufferedReader(new InputStreamReader(_entity.getContent()));
-			while(reader.readLine() != null);
+			String lineout;
+			while((lineout = reader.readLine()) != null)
+			    LOG.debug(lineout);
 			reader.close();
 		}
 		
-		LOG.info("End: delete recording at Save.TV done.");
+		LOG.info("Deleted recording with ID: " + recordingid + " on Save.TV");
 		return true;
 	}
 	

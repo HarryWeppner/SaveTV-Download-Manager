@@ -65,23 +65,27 @@ public class SaveTVDownloadManagerMain {
 		System.out.println();
 		System.out.println(" java -jar SaveTVDownloadManager.jar -username <username> -password <password> ");
 		System.out.println("                  [-proxyhost <hostname> -proxyport <port>] [-cut] ");
-		System.out.println("                  [-threads <number>] [-downloadto <path to download directory>]");
+		System.out.println("                  [-threads <number>] [-delete_on_savetv] [-downloadto <path to download directory>] ");
 		System.out.println();
 		System.out.println();
-		System.out.println("-username:    the user on Save.TV to download from");
-		System.out.println("-password:    the password for this user");
+		System.out.println("-username:          the user on Save.TV to download from");
+		System.out.println("-password:          the password for this user");
 		System.out.println();
-		System.out.println("-proxyhost:   specifies the proxy host if an HTTP proxy is in between you and Save.TV");
-		System.out.println("-proxyport:   specifies the port the HTTP proxy is listening on");
+		System.out.println("-proxyhost:         specifies the proxy host if an HTTP proxy is in between you and Save.TV");
+		System.out.println("-proxyport:         specifies the port the HTTP proxy is listening on");
 		System.out.println();
-		System.out.println("-cut:         only downloads if there is an add free version availiable");
+		System.out.println("-cut:               only downloads if there is an add free version availiable");
 		System.out.println();
-		System.out.println("-threads:     sets the number of threads for simultaneous downloads. The default is set to 3");
+		System.out.println("-threads:           sets the number of threads for simultaneous downloads. The default is set to 3");
 		System.out.println();
-		System.out.println("-mobile:      additionally downloads the mobile version of the H264 recordings if present");
+		System.out.println("-mobile:            additionally downloads the mobile version of the H264 recordings if present");
 		System.out.println();
-		System.out.println("-downloadto:  sets the directory to download the videos to. The default setting");
-		System.out.println("              is to a directory named \'downloads\' within the current directory");
+		System.out.println("-mobile:            additionally downloads the mobile version of the H264 recordings if present");
+		System.out.println();
+		System.out.println("-delete_on_savetv:  additionally downloads the mobile version of the H264 recordings if present");
+		System.out.println();
+		System.out.println("-downloadto:        sets the directory to download the videos to. The default setting");
+		System.out.println("                    is to a directory named \'downloads\' within the current directory");
 	}
     
 

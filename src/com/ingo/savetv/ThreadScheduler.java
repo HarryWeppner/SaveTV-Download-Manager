@@ -131,6 +131,11 @@ public class ThreadScheduler {
 		    // now find the video with the respective ID again and remove it from the list
 			// find out which of the threads was successful and update the database accordingly	
 		    try {
+		    	for(Recording recording: _recordings){
+		    		if(recording.getId().equals(rec.getId())){
+		    			recording.setComplete();
+		    		}
+		    	}
 			    _rcm.update(rec);
 			} catch (SQLException ex){
 				LOG.error("Error when trying to set the recording with id " + rec.getId() + " to complete.");
