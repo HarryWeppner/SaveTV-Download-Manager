@@ -60,6 +60,7 @@ public class DownloadManager {
 	private HttpEntity _entity;
 	private static final Log LOG = LogFactory.getLog(DownloadManager.class);;
 	private static RecordingManager _rcm = null;
+	private static final  long TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD = 172800000; // = 48 hours;
 	
 	
 	private void createHTTPClient(){
@@ -181,7 +182,7 @@ public class DownloadManager {
 		
 	}
 	
-	private List<Recording> findRecordingIdsInPage(String page, boolean cut, boolean mobile){
+	private List<Recording> findRecordingIdsInPage(String page){
 		Pattern MY_PATTERN = Pattern.compile("openWindow\\([0-9]+\\, [0,1]\\, -?[0,1]\\, [0-9]\\)");
 		Matcher m = MY_PATTERN.matcher(page);
 		List<Recording> recordings = new ArrayList<Recording>();
@@ -196,27 +197,8 @@ public class DownloadManager {
 			  case 4 : recording.setType(Recording.H264_MOBILE) ; break;
 			  case 5 : recording.setType(Recording.H264_STANDARD) ; break;
 			}
-			if(cut){
-		       try {
-			     if(isAddFreeAvailable(recording.getId())){
-		    		recording.setAddFree(true);
-		    	 } else {
-		    		recording.setAddFree(false);
-		    	 }
-			     recording.setFirstTried(new Date());
-			     
-		       } catch(IOException e){
-		    	   LOG.error("Error trying to determine if there is an add free version availiable. Setting the flag to NO");
-		    	   recording.setAddFree(false);
-		    	   recording.setFirstTried(new Date());
-		       }
-	    	} else {
-	    		 recording.setAddFree(false);
-			}
-			if((recType != Recording.H264_MOBILE) || ((recType == Recording.H264_MOBILE) && mobile)){
-			    recordings.add(recording);
-                LOG.info("Found recording in html page of type " + recording.getTypeName() + " with ID: " + recording.getId());
-			}
+			recordings.add(recording);
+            LOG.debug("Found recording in html page of type " + recording.getTypeName() + " with ID: " + recording.getId());
 		}
 		return recordings;
 	}
@@ -422,25 +404,36 @@ public class DownloadManager {
 				// that are already downloaded and only add the ones that are new to the list of recordings to download.
 				LOG.debug("Initialize Recording Manager");
 				_rcm = RecordingManagerFactory.getInstance(pm.getDbUsed());
-				List<Recording> recordings = this.findRecordingIdsInPage(content, pm.isCut(), pm.getMobileVersion());
+				List<Recording> recordings = this.findRecordingIdsInPage(content);
 				content = null;
 			
 				recordings = _rcm.alignWithDB(recordings);
-
 				
-				// set the content to null so it can be removed
-				LOG.debug("After checking the content against the database we have " + recordings.size() + " to download");
-				if(recordings.size() > 0){
-					// Loop over all the recordings that we want to download now and that match the parameters there where
-					// specified on the commandline.
-					LOG.info("Looking for download URLs for new recordings");
-					for(Iterator<Recording> it = recordings.iterator(); it.hasNext(); ){
-						Recording recording = it.next();
-						recording.setDownloadURL(getDownloadURL(recording));
-					}	
+				// check if the really have to download the recordings found based on the switches -cut and -mobile, on the availability
+				// of a cutlist and the time since the first try to download the recording
+				for(Iterator<Recording> it = recordings.iterator(); it.hasNext(); ){
+					Recording recording = it.next();
+					if(!pm.getMobileVersion() && recording.getType() == Recording.H264_MOBILE){
+					    it.remove();
+					    continue;
+					} else {
+						if(pm.isCut()){
+						   if(!isAddFreeAvailable(recording.getId())){
+							   if((new Date().getTime() - recording.getFirstTried().getTime()) < TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
+								   it.remove();
+							       continue;
+							   } 
+						   } else {
+							   recording.isAddFree();
+						   }
+						}
+					}
+					LOG.info("Looking for download URLs for new recording with ID:" + recording.getId() + " and of type " + recording.getTypeName());
+					recording.setDownloadURL(getDownloadURL(recording));
+				}	
 					
-
-				    LOG.info("Starting to download the " + recordings.size() + " recording that where found");
+				if(recordings.size() > 0){	
+				    LOG.info("Starting to download the " + recordings.size() + " recordings that where found");
 					
 					ThreadScheduler scheduler = new ThreadScheduler(_client, recordings, pm.getDownloadDirectory(), pm.getDbUsed());
 					// start the number of threads given in the arguments of the application

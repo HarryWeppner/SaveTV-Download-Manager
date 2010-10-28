@@ -22,8 +22,6 @@ public abstract class RecordingManager {
 	protected static final Log LOG = LogFactory.getLog(RecordingManager.class);	
 	protected static final String _DB = "data/savetv";
 	
-	private   static final  long TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD = 172800000;
-
 
 	public abstract boolean initialize();
 	
@@ -83,23 +81,14 @@ public abstract class RecordingManager {
 			if(!returnrec.isComplete()){
 				if(returnrec.getId() == null){
 					try {
+						recording.setFirstTried(new Date());
 				        this.insert(recording);
-				        LOG.info("The recorindg with ID: " + recording.getId() + " is new adding it to the database");
+				        LOG.debug("The recorindg with ID: " + recording.getId() + " is new adding it to the database");
 					} catch (SQLException e) {
 						LOG.error("Error when trying to insert the new recording with id " + recording.getId() + " into the db. The error was " + e.getMessage());
 					}
 				} else {
-			    	// check if the 48 hours timespan from the first try to find a custlist is expired. If yes download
-			    	// the recording no matter whether we do have a cutlist or not
-					if(!recording.isAddFree()){
-			    	  if((new Date().getTime() - returnrec.getFirstTried().getTime()) > TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
-			    	 	LOG.info("Found recording with " + returnrec.getId() + " that after 48 hours still has no cutlist. Adding it to the download list");
-			    	  } else {
-			    		 it.remove();
-			    	  }
-				    } else {
-				    	LOG.info("The recording with ID: " + recording.getId() + " is add free. Adding it to the download list");
-				    }
+					recording.setFirstTried(returnrec.getFirstTried());
 				}
 				
 			} else {
