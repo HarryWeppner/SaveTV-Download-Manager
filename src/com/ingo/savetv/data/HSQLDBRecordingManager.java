@@ -110,11 +110,12 @@ public class HSQLDBRecordingManager extends RecordingManager {
 			if(!(recording.getTitle() == null)){ sb.append(", title = '"); sb.append(recording.getTitle()); sb.append("' "); }
 			if(!(recording.getDescription() == null)){ sb.append(", description = '"); sb.append(recording.getDescription()); sb.append("' "); }
 			if(!(recording.getFilename() == null)){ sb.append(", filename = '"); sb.append(recording.getFilename()); sb.append("' "); }
-			if(!(recording.getFilename() == null)){ sb.append(", filetype = '"); sb.append(recording.getType()); sb.append("' "); }
 			if(!(recording.getFirstTried() == null)){ sb.append(", firsttry = '"); sb.append(new java.sql.Timestamp(recording.getFirstTried().getTime())); sb.append("' ");}
 			if(!recording.isComplete()) sb.append(", complete = FALSE "); else sb.append(", complete = TRUE "); 
 			sb.append("WHERE id = '");
 			sb.append(recording.getId());
+			sb.append("' AND filetype = '");
+			sb.append(recording.getType());
 			sb.append("'");
 			
 			LOG.debug(sb.toString());

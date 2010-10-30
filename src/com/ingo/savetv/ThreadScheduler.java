@@ -134,6 +134,7 @@ public class ThreadScheduler {
 		    	for(Recording recording: _recordings){
 		    		if(recording.getId().equals(rec.getId())){
 		    			recording.setComplete();
+		    			break;
 		    		}
 		    	}
 			    _rcm.update(rec);
