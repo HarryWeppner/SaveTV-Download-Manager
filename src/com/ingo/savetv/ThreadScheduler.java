@@ -95,10 +95,10 @@ public class ThreadScheduler {
 			                break;
 						}
 					}
-					if(recording.getType() == Recording.DIVX_STANDARD | recording.getType() == Recording.H264_STANDARD)  
-					   LOG.info("Download for standard version of recording with ID: " + recording.getId()  + " started successfully");
-					else
-					   LOG.info("Download for mobile version of recording with ID: " + recording.getId()  + " started successfully");
+					// if(recording.getType() == Recording.DIVX_STANDARD | recording.getType() == Recording.H264_STANDARD)  
+					//   LOG.info("Download for standard version of recording with ID: " + recording.getId()  + " started successfully");
+					// else
+					//   LOG.info("Download for mobile version of recording with ID: " + recording.getId()  + " started successfully");
 			}
 		}
 	}
@@ -112,10 +112,10 @@ public class ThreadScheduler {
 			GetRecording video = new GetRecording(_client, this, recording, _directory);
 			video.setName(THREADNAME + _rnd.nextInt(RANDOMBOUNDARY));
 			video.start();
-			if(recording.getType() == Recording.DIVX_STANDARD | recording.getType() == Recording.H264_STANDARD)  
-			   LOG.info("Download for standard recording " + recording.getId()  + " started successfully");
-			else
-			   LOG.info("Download for mobile recording " + recording.getId()  + " started successfully");
+			/// if(recording.getType() == Recording.DIVX_STANDARD | recording.getType() == Recording.H264_STANDARD)  
+			//   LOG.info("Download for standard recording " + recording.getId()  + " started successfully");
+			///else
+			//   LOG.info("Download for mobile recording " + recording.getId()  + " started successfully");
 			numberOfRunningThreads++;
 			break;
 		}

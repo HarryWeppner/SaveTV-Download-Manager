@@ -12,9 +12,11 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -353,6 +355,24 @@ public class DownloadManager {
 	}
 	
 	
+	public Set<Integer> findAdditionalArchivePages(String firstpage){
+		   int begincut = firstpage.indexOf("Gefundene Sendungen:");
+		   int endcut = firstpage.indexOf("</div>", begincut);
+		   Set<Integer> pages = new HashSet<Integer>(); 
+		   
+		   String searcharea = firstpage.substring(begincut, endcut);
+		   Pattern MY_PATTERN = Pattern.compile("iPageNumber=[0-999]");
+		   Matcher m = MY_PATTERN.matcher(searcharea);
+		   while(m.find()){
+			   String s[] = m.group().split("=");
+			   try {
+			     pages.add(Integer.parseInt(s[1]));
+			   } catch (Exception ex){}
+		   }
+		   return pages;
+	}
+	
+	
 	
     /**
      * Start a new download session with username and password of a given user at save.tv and a directory to download
@@ -405,6 +425,16 @@ public class DownloadManager {
 				LOG.debug("Initialize Recording Manager");
 				_rcm = RecordingManagerFactory.getInstance(pm.getDbUsed());
 				List<Recording> recordings = this.findRecordingIdsInPage(content);
+						
+				// search for additional pages that the user might have as recordings accumulate on the Save.TV website.
+				Set<Integer> s = findAdditionalArchivePages(content);
+				if(s.size() > 0){
+					for(Integer i : s){
+					   content = executeGet("http://www.save.tv/STV/M/obj/user/usShowVideoArchive.cfm?iPageNumber=" + i.toString() + "&amp;iFilterType=1&amp;sText=&amp;iTextSearchType=1&amp;ChannelID=0&amp;TVCategoryID=0&amp;TVSubCategoryID=0&amp;iRecordingState=1");	
+					   recordings.addAll(this.findRecordingIdsInPage(content));
+					}
+				}
+				
 				content = null;
 			
 				recordings = _rcm.alignWithDB(recordings);
@@ -424,7 +454,7 @@ public class DownloadManager {
 							       continue;
 							   } 
 						   } else {
-							   recording.isAddFree();
+							   recording.setAddFree(true);
 						   }
 						}
 					}
