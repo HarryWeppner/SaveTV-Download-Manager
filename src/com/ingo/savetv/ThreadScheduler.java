@@ -1,5 +1,6 @@
 package com.ingo.savetv;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,7 +21,6 @@ public class ThreadScheduler {
 	private static HttpClient _client;
 	private static List<Recording> _recordings;
 	private static List<Recording> _trackkeeper;
-	private static String _directory;
 	private static final String THREADNAME = "Downloader-";
 	private static final Log LOG = LogFactory.getLog(DownloadManager.class);
 	private Random _rnd = null;
@@ -33,14 +33,13 @@ public class ThreadScheduler {
 
 
 	
-	public ThreadScheduler(HttpClient client, List<Recording> recordings, String directory, int dbused){
+	public ThreadScheduler(HttpClient client, List<Recording> recordings, int dbused){
 		
 		
 		_recordings = recordings;
 		_trackkeeper = new ArrayList<Recording>(recordings);
 		
 		_client = client;
-		_directory = directory;
 		
 		_rnd = new Random();
 		
@@ -71,7 +70,7 @@ public class ThreadScheduler {
 			
 			for(int i = 0; i < number_of_threads; i++){
 				    Recording recording = _recordings.get(i);
-					GetRecording video = new GetRecording(_client, this, recording, _directory);
+					GetRecording video = new GetRecording(_client, this, recording);
 					
 					
 					// Give the download thread a name and generate a random number so all download thread are unique
@@ -95,10 +94,6 @@ public class ThreadScheduler {
 			                break;
 						}
 					}
-					// if(recording.getType() == Recording.DIVX_STANDARD | recording.getType() == Recording.H264_STANDARD)  
-					//   LOG.info("Download for standard version of recording with ID: " + recording.getId()  + " started successfully");
-					// else
-					//   LOG.info("Download for mobile version of recording with ID: " + recording.getId()  + " started successfully");
 			}
 		}
 	}
@@ -109,13 +104,10 @@ public class ThreadScheduler {
 		while(it.hasNext()){
 			Recording recording = it.next();
 			it.remove();
-			GetRecording video = new GetRecording(_client, this, recording, _directory);
+			GetRecording video = new GetRecording(_client, this, recording);
 			video.setName(THREADNAME + _rnd.nextInt(RANDOMBOUNDARY));
 			video.start();
-			/// if(recording.getType() == Recording.DIVX_STANDARD | recording.getType() == Recording.H264_STANDARD)  
-			//   LOG.info("Download for standard recording " + recording.getId()  + " started successfully");
-			///else
-			//   LOG.info("Download for mobile recording " + recording.getId()  + " started successfully");
+
 			numberOfRunningThreads++;
 			break;
 		}
@@ -138,6 +130,15 @@ public class ThreadScheduler {
 		    		}
 		    	}
 			    _rcm.update(rec);
+
+			    // when everything is complete move the file from the temp directory to the real
+			    // download directory
+			    File src = new File(Parameter.getTmpDirectory() + "/" + rec.getFilename());
+			    File dest = new File(Parameter.getDownloadDirectory() + "/" + rec.getFilename());
+			    if(!src.renameTo(dest))
+			       LOG.debug("The file " + " was moved successfully to: ..");			    	
+			   
+			    
 			} catch (SQLException ex){
 				LOG.error("Error when trying to set the recording with id " + rec.getId() + " to complete.");
 				LOG.error(ex.getMessage());

@@ -17,7 +17,7 @@ import com.ingo.savetv.Parameter;
 public class SaveTVDownloadManagerMain {
     
 	private static final Log LOG = LogFactory.getLog(SaveTVDownloadManagerMain.class);
-	private static final String VERSION = "0.9.2.00";
+	private static final String VERSION = "0.9.3.00";
 		
 	public static void printVersion(){
 		System.out.println(VERSION);
@@ -37,16 +37,16 @@ public class SaveTVDownloadManagerMain {
         LOG.info("SaveTVDownloadManager Version: " + VERSION + " is starting");
     	try {
 
-    		Parameter pm = new Parameter(args);
-      		if(pm.parameterOk()){
+    		Parameter.initialize(args);
+      		if(Parameter.parameterOk()){
      			DownloadManager dl;
-      			if(pm.isProxySet())
-      				dl = new DownloadManager(pm.getProxyHost(), Integer.parseInt(pm.getProxyport()));
+      			if(Parameter.isProxySet())
+      				dl = new DownloadManager(Parameter.getProxyHost(), Integer.parseInt(Parameter.getProxyport()));
       			else
       				dl = new DownloadManager();
     	
       			// start parsing the application. main entry
-      			dl.start(pm);
+      			dl.start();
     		
       		    LOG.info("SaveTVDownloadManager finished ");
       		} else {

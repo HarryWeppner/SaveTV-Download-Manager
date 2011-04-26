@@ -5,21 +5,38 @@ import com.ingo.savetv.main.SaveTVDownloadManagerMain;
 
 public class Parameter {
 	
-	private String _username;
-	private String _password;
-	private String _proxyhost;
-	private String _proxyport;
-	private String _downloaddirectory = "downloads";
-	private int _number_of_downlaodthreads = 3;
-	private boolean _deleterecordingsafterdownload = false;
-	private boolean _proxyset;
-	private boolean _parameterok = false;
-	private boolean _cut;
-	private boolean _mobileversion = false;
-	private String _loglevel;
-	private int _dbused = RecordingManager.HSQLDB;
+	private static String _username;
+	private static String _password;
+	private static String _proxyhost;
+	private static String _proxyport;
+	private static String _downloaddirectory = "downloads";
+	private static String _tmpdirectory = "downloads/tmp";
+	private static int _number_of_downlaodthreads = 3;
+	private static boolean _deleterecordingsafterdownload = false;
+	private static boolean _proxyset;
+	private static boolean _parameterok = false;
+	private static boolean _cut;
+	private static boolean _mobileversion = false;
+	private static String _loglevel;
+	private static boolean _initialized = false;
+	private static int _dbused = RecordingManager.HSQLDB;
 	
-	public Parameter(String[] args){
+	private static class ParameterHolder {
+		public static final Parameter INSTANCE = new Parameter();
+	}
+	
+	public static Parameter getInstance(){
+		return ParameterHolder.INSTANCE;
+	}
+	
+	private Parameter(){
+	}
+	
+	public static boolean isInitialized(){
+		return _initialized;
+	}
+	
+	public static void initialize(String[] args){
 		
 		// loop through all the parameter to find and set them
 		for(int i = 0; i < args.length; i++){
@@ -42,6 +59,7 @@ public class Parameter {
 			}
 			if(args[i].equalsIgnoreCase("-DOWNLOADTO")){
 				_downloaddirectory = args[i + 1];
+				_tmpdirectory = args[i + 1] + "/tmp";
 				i++;
 				continue;
 			}
@@ -107,58 +125,62 @@ public class Parameter {
 		} else {
 			_proxyset = true;
 		}
-		
+		_initialized = true;
 	}
 	
-	public boolean parameterOk(){
+	public static boolean parameterOk(){
 		return _parameterok;
 	}
 	
-	public String getUsername() {
+	public static String getUsername() {
 		return _username;
 	}
 
-	public String getPassword() {
+	public static String getPassword() {
 		return _password;
 	}
 
-	public String getProxyHost() {
+	public static String getProxyHost() {
 		return _proxyhost;
 	}
 
-	public String getProxyport() {
+	public static String getProxyport() {
 		return _proxyport;
 	}
 
-	public String getDownloadDirectory() {
+	public static String getDownloadDirectory() {
 		return _downloaddirectory;
 	}
 	
-	public boolean isDeleteRecordings(){
+	public static String getTmpDirectory(){
+		return _tmpdirectory;
+	}
+	
+	public static boolean isDeleteRecordings(){
 		return _deleterecordingsafterdownload;
 	}
 	
-	public int getNumberOfDownloadThreads(){
+	public static int getNumberOfDownloadThreads(){
 		return _number_of_downlaodthreads;
 	}
 	
-	public boolean isProxySet(){
+	public static boolean isProxySet(){
 	   return _proxyset;	
 	}
 
-	public boolean isCut(){
+	public static boolean isCut(){
 		return _cut;
 	}
 	
-	public String getLogLevel(){
+	public static String getLogLevel(){
 		return _loglevel;
 	}
 	
-	public boolean getMobileVersion(){
+	public static boolean getMobileVersion(){
 		return _mobileversion;
 	}
 	
-	public int getDbUsed(){
+	public static int getDbUsed(){
 		return _dbused;
 	}
 	

@@ -386,16 +386,20 @@ public class DownloadManager {
      * @param cut		try to download the recording with the applied cutlist that has the ads already removed
      * @param mobile    also try to find the mobile version of the recording and download it aswell.
      */
-	public void start(Parameter pm){
+	public void start(){
 		try {
 			
 			// first we need to find out if the directory to download the files to does alrady exist. if not we
 			// simply crate it.
-			if(!(new File(pm.getDownloadDirectory()).exists()))
-				new File(pm.getDownloadDirectory()).mkdir();
+			if(!(new File(Parameter.getDownloadDirectory()).exists())){
+				new File(Parameter.getDownloadDirectory()).mkdir();
+			    // also create a tmp directory where the download are stored until they are complete
+			    String tmpDir = Parameter.getDownloadDirectory() + "/tmp";
+			    new File(tmpDir).mkdir();
+			}
 			
 			// log which database we are going to use
-			if(pm.getDbUsed() == 1){
+			if(Parameter.getDbUsed() == 1){
 				LOG.info("Using HSQLDB to store the information for the already downloaded recordings");
 			} else {
 			    LOG.info("Using MYSQL to store the information for the already downloaded recordings");	
@@ -409,21 +413,21 @@ public class DownloadManager {
 			LOG.debug("End: Calling the main page of Save.tv");
 			
 			// Log on to the system itself by providing username and password
-			LOG.info("Login in to Save.tv with user " + pm.getUsername());
-			if(logonToSaveTV(pm.getUsername(), pm.getPassword())){
+			LOG.info("Login in to Save.tv with user " + Parameter.getUsername());
+			if(logonToSaveTV(Parameter.getUsername(), Parameter.getPassword())){
 				
 				LOG.debug("Login in to Save.tv comlete");
 			
 				// get the Archive of already recorded videos for the logged on user
-				LOG.debug("Retrieving list of recorded videos availiable on Save.tv for user " + pm.getUsername());
+				LOG.debug("Retrieving list of recorded videos availiable on Save.tv for user " + Parameter.getUsername());
 				String content = executeGet("http://www.save.tv/STV/M/obj/user/usShowVideoArchive.cfm");
-				LOG.debug("Retrieving list of recordings for user " + pm.getUsername() + " complete");
+				LOG.debug("Retrieving list of recordings for user " + Parameter.getUsername() + " complete");
 			
 				// Instantiate the RecordingManager that locally keeps track of what recordings have been downloaded already
 				// so they do not get downloaded time and again. Compare the list that came back from save.tv with the recordings
 				// that are already downloaded and only add the ones that are new to the list of recordings to download.
 				LOG.debug("Initialize Recording Manager");
-				_rcm = RecordingManagerFactory.getInstance(pm.getDbUsed());
+				_rcm = RecordingManagerFactory.getInstance(Parameter.getDbUsed());
 				List<Recording> recordings = this.findRecordingIdsInPage(content);
 						
 				// search for additional pages that the user might have as recordings accumulate on the Save.TV website.
@@ -443,11 +447,11 @@ public class DownloadManager {
 				// of a cutlist and the time since the first try to download the recording
 				for(Iterator<Recording> it = recordings.iterator(); it.hasNext(); ){
 					Recording recording = it.next();
-					if(!pm.getMobileVersion() && recording.getType() == Recording.H264_MOBILE){
+					if(!Parameter.getMobileVersion() && recording.getType() == Recording.H264_MOBILE){
 					    it.remove();
 					    continue;
 					} else {
-						if(pm.isCut()){
+						if(Parameter.isCut()){
 						   if(!isAddFreeAvailable(recording.getId())){
 							   if((new Date().getTime() - recording.getFirstTried().getTime()) < TIME_ELAPSED_BEFORE_EVENTUAL_DOWNLOAD){
 								   it.remove();
@@ -465,9 +469,9 @@ public class DownloadManager {
 				if(recordings.size() > 0){	
 				    LOG.info("Starting to download the " + recordings.size() + " recordings that where found");
 					
-					ThreadScheduler scheduler = new ThreadScheduler(_client, recordings, pm.getDownloadDirectory(), pm.getDbUsed());
+					ThreadScheduler scheduler = new ThreadScheduler(_client, recordings, Parameter.getDbUsed());
 					// start the number of threads given in the arguments of the application
-					scheduler.start(pm.getNumberOfDownloadThreads());
+					scheduler.start(Parameter.getNumberOfDownloadThreads());
 					
 					LOG.debug("Going into a loop to wait for all download threads to finish");
 					// loop and sleep with this thread until all the download threads are done.
@@ -477,7 +481,7 @@ public class DownloadManager {
 					}
 					
 					// if the Delete Recording parameter is set go ahead and delete all recordings that are marked as finished
-					if(pm.isDeleteRecordings()){
+					if(Parameter.isDeleteRecordings()){
 						for(Iterator<Recording> it = recordings.iterator();it.hasNext();){
 							Recording rec = it.next();
 							if(rec.isComplete())
@@ -523,10 +527,10 @@ public class DownloadManager {
 		 * @param downloadurl
 		 * @param folder
 		 */
-		public GetRecording(HttpClient httpClient, ThreadScheduler scheduler, Recording recording, String folder){
+		public GetRecording(HttpClient httpClient, ThreadScheduler scheduler, Recording recording){
 			this._httpClient = httpClient;
 			this._downloadURL = recording.getDownloadURL();
-			this._folder = folder;
+			this._folder = Parameter.getDownloadDirectory();
 			this._scheduler = scheduler;
             this._recording = recording;
 		}
@@ -580,10 +584,10 @@ public class DownloadManager {
               // as with complete downloads being marked in the database we would not get here with a completed
               // download
               if(filename != null){		  
-           	  	  filename = _folder + "/" + filename;
+           	  	  filename = _folder + "/tmp/" + filename;
     		  } else {
 	    		  Random generator = new Random();
-	    		  filename = _folder + "/no_filename_found_ " + generator.nextInt(99999) + ".mp4";
+	    		  filename = _folder + "/no_filename_found_ " + generator.nextInt(99999) + ".info";
 	    	  }
               
               
