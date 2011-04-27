@@ -391,12 +391,13 @@ public class DownloadManager {
 			
 			// first we need to find out if the directory to download the files to does alrady exist. if not we
 			// simply crate it.
-			if(!(new File(Parameter.getDownloadDirectory()).exists())){
+			if(!(new File(Parameter.getDownloadDirectory()).exists()))
 				new File(Parameter.getDownloadDirectory()).mkdir();
-			    // also create a tmp directory where the download are stored until they are complete
-			    String tmpDir = Parameter.getDownloadDirectory() + "/tmp";
-			    new File(tmpDir).mkdir();
-			}
+			
+			// check if there is a tmp folder underneath the download directory if not create it
+		    // also create a tmp directory where the download are stored until they are complete
+		    if(!new File(Parameter.getTmpDirectory()).exists())
+		        new File(Parameter.getTmpDirectory()).mkdir();
 			
 			// log which database we are going to use
 			if(Parameter.getDbUsed() == 1){
@@ -569,6 +570,10 @@ public class DownloadManager {
               String headervalue = h[0].toString();
               headervalue.indexOf("=");
               filename = headervalue.substring(headervalue.indexOf("=") + 1, headervalue.length());
+              
+              // replace each umlaut that is in the filename with the respective ae, oe, ue, 
+              filename = filename.replaceAll("Š", "ae").replaceAll("š", "oe").replaceAll("Ÿ", "ue")
+                             .replaceAll("€", "Ae").replaceAll("…", "Oe").replaceAll("†", "Ue");
               
               // append the word Mobile at the begining of all the mobile files that we download
               if(_recording.getType() == Recording.H264_MOBILE){

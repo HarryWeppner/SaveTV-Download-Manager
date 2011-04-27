@@ -10,7 +10,7 @@ public class Parameter {
 	private static String _proxyhost;
 	private static String _proxyport;
 	private static String _downloaddirectory = "downloads";
-	private static String _tmpdirectory = "downloads/tmp";
+	private static String _tmpdirectory = "tmp";
 	private static int _number_of_downlaodthreads = 3;
 	private static boolean _deleterecordingsafterdownload = false;
 	private static boolean _proxyset;
@@ -59,7 +59,8 @@ public class Parameter {
 			}
 			if(args[i].equalsIgnoreCase("-DOWNLOADTO")){
 				_downloaddirectory = args[i + 1];
-				_tmpdirectory = args[i + 1] + "/tmp";
+			    String fileseparator = System.getProperty("file.separator");
+				_tmpdirectory = args[i + 1] + fileseparator + _tmpdirectory;
 				i++;
 				continue;
 			}
