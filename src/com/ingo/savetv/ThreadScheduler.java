@@ -133,10 +133,13 @@ public class ThreadScheduler {
 
 			    // when everything is complete move the file from the temp directory to the real
 			    // download directory
-			    File src = new File(Parameter.getTmpDirectory() + "/" + rec.getFilename());
-			    File dest = new File(Parameter.getDownloadDirectory() + "/" + rec.getFilename());
-			    if(!src.renameTo(dest))
-			       LOG.debug("The file " + " was moved successfully to: ..");			    	
+			    try {
+			    	File src = new File(Parameter.getTmpDirectory() + "/" + rec.getFilename());
+			    	File dest = new File(Parameter.getDownloadDirectory() + "/" + rec.getFilename());
+			    	if(!src.renameTo(dest)) LOG.debug("The file " + " was moved successfully to: ..");
+			    } catch(Exception e){
+			    	LOG.error("Could not move file " +  rec.getFilename() + "from temporary directory to download directory. The error was:" + e.getMessage());
+			    }
 			   
 			    
 			} catch (SQLException ex){
