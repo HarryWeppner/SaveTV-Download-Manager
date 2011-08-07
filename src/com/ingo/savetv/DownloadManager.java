@@ -391,8 +391,15 @@ public class DownloadManager {
 			
 			// first we need to find out if the directory to download the files to does alrady exist. if not we
 			// simply crate it.
-			if(!(new File(Parameter.getDownloadDirectory()).exists()))
+			if(!(new File(Parameter.getDownloadDirectory()).exists())){
 				new File(Parameter.getDownloadDirectory()).mkdir();
+				// check if we are running on a windows system. If so make the .tmp directory a hidden directory
+				// by using the attributes
+				if(System.getProperty("os.name").equals("Windows")){
+				  	String cmd[] = {"attrib","+h",Parameter.getDownloadDirectory()};
+				  	Runtime.getRuntime().exec(cmd);
+				}
+			}
 			
 			// check if there is a tmp folder underneath the download directory if not create it
 		    // also create a tmp directory where the download are stored until they are complete
@@ -588,8 +595,8 @@ public class DownloadManager {
               // let's check if the file exist alread on the harddrive. That is usually a partial download
               // as with complete downloads being marked in the database we would not get here with a completed
               // download
-              if(filename != null){		  
-           	  	  filename = _folder + "/tmp/" + filename;
+              if(filename != null){
+           	  	  filename = Parameter.getTmpDirectory() + "/" + filename;
     		  } else {
 	    		  Random generator = new Random();
 	    		  filename = _folder + "/no_filename_found_ " + generator.nextInt(99999) + ".info";
